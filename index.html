@@ -29,19 +29,6 @@ const PortfolioDashboard = () => {
           { id: 3, title: 'Geometrische Körper', type: 'basic', status: 'not_achieved', weight: 2, achievedDate: '' },
           { id: 4, title: 'Komplexe Textaufgaben', type: 'advanced', status: 'achieved', weight: 1, achievedDate: '2024-12-05' },
           { id: 5, title: 'Wahrscheinlichkeitsrechnung', type: 'advanced', status: 'partial', weight: 2, achievedDate: '2025-01-15' }
-        ],
-        timelineData: [
-          { month: 'August', basicAchieved: 15, basicPartial: 45, basicNotAchieved: 40, advancedAchieved: 5, advancedPartial: 15, advancedNotAchieved: 80 },
-          { month: 'September', basicAchieved: 25, basicPartial: 40, basicNotAchieved: 35, advancedAchieved: 10, advancedPartial: 20, advancedNotAchieved: 70 },
-          { month: 'Oktober', basicAchieved: 40, basicPartial: 35, basicNotAchieved: 25, advancedAchieved: 15, advancedPartial: 25, advancedNotAchieved: 60 },
-          { month: 'November', basicAchieved: 50, basicPartial: 30, basicNotAchieved: 20, advancedAchieved: 20, advancedPartial: 30, advancedNotAchieved: 50 },
-          { month: 'Dezember', basicAchieved: 60, basicPartial: 25, basicNotAchieved: 15, advancedAchieved: 25, advancedPartial: 35, advancedNotAchieved: 40 },
-          { month: 'Januar', basicAchieved: 70, basicPartial: 20, basicNotAchieved: 10, advancedAchieved: 30, advancedPartial: 40, advancedNotAchieved: 30 },
-          { month: 'Februar', basicAchieved: 75, basicPartial: 20, basicNotAchieved: 5, advancedAchieved: 35, advancedPartial: 35, advancedNotAchieved: 30 },
-          { month: 'März', basicAchieved: 80, basicPartial: 15, basicNotAchieved: 5, advancedAchieved: 40, advancedPartial: 35, advancedNotAchieved: 25 },
-          { month: 'April', basicAchieved: 85, basicPartial: 10, basicNotAchieved: 5, advancedAchieved: 45, advancedPartial: 30, advancedNotAchieved: 25 },
-          { month: 'Mai', basicAchieved: 90, basicPartial: 8, basicNotAchieved: 2, advancedAchieved: 50, advancedPartial: 30, advancedNotAchieved: 20 },
-          { month: 'Juni', basicAchieved: 95, basicPartial: 5, basicNotAchieved: 0, advancedAchieved: 55, advancedPartial: 25, advancedNotAchieved: 20 }
         ]
       },
       {
@@ -53,19 +40,6 @@ const PortfolioDashboard = () => {
           { id: 8, title: 'Aufsatz schreiben', type: 'basic', status: 'partial', weight: 2, achievedDate: '2025-02-20' },
           { id: 9, title: 'Gedichtanalyse', type: 'advanced', status: 'partial', weight: 1, achievedDate: '2025-03-10' },
           { id: 10, title: 'Rhetorik', type: 'advanced', status: 'not_achieved', weight: 1, achievedDate: '' }
-        ],
-        timelineData: [
-          { month: 'August', basicAchieved: 25, basicPartial: 35, basicNotAchieved: 40, advancedAchieved: 15, advancedPartial: 25, advancedNotAchieved: 60 },
-          { month: 'September', basicAchieved: 35, basicPartial: 30, basicNotAchieved: 35, advancedAchieved: 20, advancedPartial: 30, advancedNotAchieved: 50 },
-          { month: 'Oktober', basicAchieved: 50, basicPartial: 25, basicNotAchieved: 25, advancedAchieved: 25, advancedPartial: 35, advancedNotAchieved: 40 },
-          { month: 'November', basicAchieved: 60, basicPartial: 20, basicNotAchieved: 20, advancedAchieved: 30, advancedPartial: 40, advancedNotAchieved: 30 },
-          { month: 'Dezember', basicAchieved: 70, basicPartial: 20, basicNotAchieved: 10, advancedAchieved: 35, advancedPartial: 45, advancedNotAchieved: 20 },
-          { month: 'Januar', basicAchieved: 75, basicPartial: 15, basicNotAchieved: 10, advancedAchieved: 40, advancedPartial: 40, advancedNotAchieved: 20 },
-          { month: 'Februar', basicAchieved: 80, basicPartial: 15, basicNotAchieved: 5, advancedAchieved: 45, advancedPartial: 35, advancedNotAchieved: 20 },
-          { month: 'März', basicAchieved: 85, basicPartial: 10, basicNotAchieved: 5, advancedAchieved: 50, advancedPartial: 30, advancedNotAchieved: 20 },
-          { month: 'April', basicAchieved: 88, basicPartial: 10, basicNotAchieved: 2, advancedAchieved: 55, advancedPartial: 25, advancedNotAchieved: 20 },
-          { month: 'Mai', basicAchieved: 92, basicPartial: 6, basicNotAchieved: 2, advancedAchieved: 60, advancedPartial: 25, advancedNotAchieved: 15 },
-          { month: 'Juni', basicAchieved: 95, basicPartial: 5, basicNotAchieved: 0, advancedAchieved: 65, advancedPartial: 20, advancedNotAchieved: 15 }
         ]
       }
     ];
@@ -73,25 +47,65 @@ const PortfolioDashboard = () => {
     setSubjects(sampleSubjects);
   }, []);
 
+  const generateTimelineFromGoals = (learningGoals) => {
+    if (learningGoals.length === 0) {
+      return [];
+    }
+
+    const months = [
+      'August', 'September', 'Oktober', 'November', 'Dezember',
+      'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni'
+    ];
+    
+    const timelineData = months.map(month => ({
+      month,
+      basicAchieved: 0,
+      basicPartial: 0,
+      basicNotAchieved: 0,
+      advancedAchieved: 0,
+      advancedPartial: 0,
+      advancedNotAchieved: 0
+    }));
+
+    const basicGoals = learningGoals.filter(g => g.type === 'basic');
+    const advancedGoals = learningGoals.filter(g => g.type === 'advanced');
+    
+    const basicTotal = basicGoals.length;
+    const advancedTotal = advancedGoals.length;
+    
+    if (basicTotal > 0) {
+      const basicAchieved = basicGoals.filter(g => g.status === 'achieved').length;
+      const basicPartial = basicGoals.filter(g => g.status === 'partial').length;
+      const basicNotAchieved = basicGoals.filter(g => g.status === 'not_achieved').length;
+      
+      timelineData.forEach(month => {
+        month.basicAchieved = Math.round((basicAchieved / basicTotal) * 100);
+        month.basicPartial = Math.round((basicPartial / basicTotal) * 100);
+        month.basicNotAchieved = Math.round((basicNotAchieved / basicTotal) * 100);
+      });
+    }
+    
+    if (advancedTotal > 0) {
+      const advancedAchieved = advancedGoals.filter(g => g.status === 'achieved').length;
+      const advancedPartial = advancedGoals.filter(g => g.status === 'partial').length;
+      const advancedNotAchieved = advancedGoals.filter(g => g.status === 'not_achieved').length;
+      
+      timelineData.forEach(month => {
+        month.advancedAchieved = Math.round((advancedAchieved / advancedTotal) * 100);
+        month.advancedPartial = Math.round((advancedPartial / advancedTotal) * 100);
+        month.advancedNotAchieved = Math.round((advancedNotAchieved / advancedTotal) * 100);
+      });
+    }
+    
+    return timelineData;
+  };
+
   const addSubject = () => {
     if (newSubjectName.trim()) {
       const newSubject = {
         id: Date.now(),
         name: newSubjectName.trim(),
-        learningGoals: [],
-        timelineData: [
-          { month: 'August', basicAchieved: 0, basicPartial: 0, basicNotAchieved: 0, advancedAchieved: 0, advancedPartial: 0, advancedNotAchieved: 0 },
-          { month: 'September', basicAchieved: 0, basicPartial: 0, basicNotAchieved: 0, advancedAchieved: 0, advancedPartial: 0, advancedNotAchieved: 0 },
-          { month: 'Oktober', basicAchieved: 0, basicPartial: 0, basicNotAchieved: 0, advancedAchieved: 0, advancedPartial: 0, advancedNotAchieved: 0 },
-          { month: 'November', basicAchieved: 0, basicPartial: 0, basicNotAchieved: 0, advancedAchieved: 0, advancedPartial: 0, advancedNotAchieved: 0 },
-          { month: 'Dezember', basicAchieved: 0, basicPartial: 0, basicNotAchieved: 0, advancedAchieved: 0, advancedPartial: 0, advancedNotAchieved: 0 },
-          { month: 'Januar', basicAchieved: 0, basicPartial: 0, basicNotAchieved: 0, advancedAchieved: 0, advancedPartial: 0, advancedNotAchieved: 0 },
-          { month: 'Februar', basicAchieved: 0, basicPartial: 0, basicNotAchieved: 0, advancedAchieved: 0, advancedPartial: 0, advancedNotAchieved: 0 },
-          { month: 'März', basicAchieved: 0, basicPartial: 0, basicNotAchieved: 0, advancedAchieved: 0, advancedPartial: 0, advancedNotAchieved: 0 },
-          { month: 'April', basicAchieved: 0, basicPartial: 0, basicNotAchieved: 0, advancedAchieved: 0, advancedPartial: 0, advancedNotAchieved: 0 },
-          { month: 'Mai', basicAchieved: 0, basicPartial: 0, basicNotAchieved: 0, advancedAchieved: 0, advancedPartial: 0, advancedNotAchieved: 0 },
-          { month: 'Juni', basicAchieved: 0, basicPartial: 0, basicNotAchieved: 0, advancedAchieved: 0, advancedPartial: 0, advancedNotAchieved: 0 }
-        ]
+        learningGoals: []
       };
       setSubjects([...subjects, newSubject]);
       setNewSubjectName('');
@@ -218,18 +232,24 @@ const PortfolioDashboard = () => {
   };
 
   const SubjectTimelineVisualization = ({ subject }) => {
-    if (!subject.timelineData || subject.timelineData.length === 0) {
+    const timelineData = generateTimelineFromGoals(subject.learningGoals);
+    
+    if (timelineData.length === 0) {
       return (
         <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <h3 className="text-lg font-semibold mb-4">Entwicklung im Schuljahr</h3>
-          <p className="text-gray-500 text-center py-8">Noch keine Timeline-Daten verfügbar</p>
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <Clock className="w-5 h-5" />
+            Entwicklung im Schuljahr - {subject.name}
+          </h3>
+          <p className="text-gray-500 text-center py-8">
+            Keine Timeline-Daten verfügbar. Fügen Sie Lernziele hinzu, um die Entwicklung zu sehen.
+          </p>
         </div>
       );
     }
 
     return (
       <div className="space-y-6">
-        {/* Grundanforderungen Timeline */}
         <div className="bg-white p-6 rounded-lg shadow-sm border">
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <Clock className="w-5 h-5" />
@@ -237,7 +257,7 @@ const PortfolioDashboard = () => {
           </h3>
           <div style={{ width: '100%', height: '300px' }}>
             <ResponsiveContainer>
-              <AreaChart data={subject.timelineData}>
+              <AreaChart data={timelineData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis 
                   dataKey="month" 
@@ -281,7 +301,6 @@ const PortfolioDashboard = () => {
           </div>
         </div>
 
-        {/* Erweiterte Anforderungen Timeline */}
         <div className="bg-white p-6 rounded-lg shadow-sm border">
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <Star className="w-5 h-5" />
@@ -289,7 +308,7 @@ const PortfolioDashboard = () => {
           </h3>
           <div style={{ width: '100%', height: '300px' }}>
             <ResponsiveContainer>
-              <AreaChart data={subject.timelineData}>
+              <AreaChart data={timelineData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis 
                   dataKey="month" 
@@ -333,7 +352,6 @@ const PortfolioDashboard = () => {
           </div>
         </div>
 
-        {/* Kombinierte Trendlinie */}
         <div className="bg-white p-6 rounded-lg shadow-sm border">
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <TrendingUp className="w-5 h-5" />
@@ -341,7 +359,7 @@ const PortfolioDashboard = () => {
           </h3>
           <div style={{ width: '100%', height: '300px' }}>
             <ResponsiveContainer>
-              <LineChart data={subject.timelineData}>
+              <LineChart data={timelineData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis 
                   dataKey="month" 
@@ -425,7 +443,6 @@ const PortfolioDashboard = () => {
                   </div>
                 </div>
                 
-                {/* Tooltip */}
                 <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
                   Gewichtung: {bubble.totalWeight}
                 </div>
@@ -463,7 +480,6 @@ const PortfolioDashboard = () => {
             </button>
           </div>
 
-          {/* Add Goal Form */}
           {showAddGoal && currentSubjectForGoal === subject.id && (
             <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
               <h4 className="font-semibold mb-3">Neues Lernziel hinzufügen</h4>
@@ -635,7 +651,6 @@ const PortfolioDashboard = () => {
       
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="flex gap-6">
-          {/* Sidebar */}
           <div className="w-64 bg-white rounded-lg shadow-sm border p-4">
             <div className="flex justify-between items-center mb-4">
               <h2 className="font-semibold">Fächer</h2>
@@ -710,7 +725,6 @@ const PortfolioDashboard = () => {
             </nav>
           </div>
           
-          {/* Main Content */}
           <div className="flex-1">
             {activeTab === 'overview' ? (
               <div className="space-y-6">
