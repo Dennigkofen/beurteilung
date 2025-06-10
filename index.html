@@ -39,35 +39,42 @@
         <aside class="w-72 bg-white p-4 border-r border-slate-200 flex flex-col shrink-0">
             <div class="flex items-center gap-3 mb-8">
                 <div class="p-2 bg-indigo-100 rounded-lg">
-                   <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-indigo-600"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path></svg>
+                   <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-indigo-600"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2 0 0 1 0-5H20"></path></svg>
                 </div>
                 <h1 class="text-xl font-bold text-slate-900">Kompetenz-Portfolio</h1>
             </div>
 
-            <!-- Overview Button -->
+            <!-- Student Management -->
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="font-semibold text-slate-500 text-sm uppercase tracking-wider">Schüler</h2>
+                <button id="showAddStudentBtn" class="p-1 text-indigo-600 hover:bg-indigo-100 rounded-lg transition-colors" title="Neuen Schüler hinzufügen">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                </button>
+            </div>
+            <div id="addStudentForm" class="hidden mb-4 p-3 bg-slate-50 rounded-lg transition-all">
+                <input type="text" id="newStudentName" placeholder="Name des Schülers..." class="w-full px-2 py-1.5 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                <div class="flex gap-2 mt-2">
+                    <button id="addStudentBtn" class="flex-1 px-3 py-1.5 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700 transition-colors">Hinzufügen</button>
+                    <button id="cancelAddStudentBtn" class="flex-1 px-3 py-1.5 bg-slate-200 text-slate-700 text-sm rounded-md hover:bg-slate-300 transition-colors">Abbrechen</button>
+                </div>
+            </div>
+            <nav id="student-nav" class="space-y-1 overflow-y-auto mb-6 custom-scrollbar"></nav>
+
+
+            <!-- Overview Button (now specific to active student) -->
             <div class="mb-4">
                 <button id="showOverviewBtn" class="w-full flex items-center gap-2 px-3 py-2 rounded-md transition-colors text-slate-700 hover:bg-slate-100">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="M18.7 8.3L12 15l-3.3-3.3c-.6-.6-1.4-.6-2-.1-.6.5-.7 1.4-.2 2L10 18l10-10"></path></svg>
-                    <span class="font-semibold">Übersicht</span>
+                    <span class="font-semibold">Übersicht (Aktueller Schüler)</span>
                 </button>
             </div>
 
             <div class="flex justify-between items-center mb-3">
-                <h2 class="font-semibold text-slate-500 text-sm uppercase tracking-wider">Fächer</h2>
-                <button id="showAddSubjectBtn" class="p-1 text-indigo-600 hover:bg-indigo-100 rounded-lg transition-colors" title="Neues Fach hinzufügen">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                </button>
+                <h2 class="font-semibold text-slate-500 text-sm uppercase tracking-wider">Fächer (Aktueller Schüler)</h2>
+                <!-- Add Subject Button is now part of the main content when a student is selected -->
             </div>
 
-            <div id="addSubjectForm" class="hidden mb-4 p-3 bg-slate-50 rounded-lg transition-all">
-                <input type="text" id="newSubjectName" placeholder="Name des Fachs..." class="w-full px-2 py-1.5 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-                <div class="flex gap-2 mt-2">
-                    <button id="addSubjectBtn" class="flex-1 px-3 py-1.5 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700 transition-colors">Hinzufügen</button>
-                    <button id="cancelAddSubjectBtn" class="flex-1 px-3 py-1.5 bg-slate-200 text-slate-700 text-sm rounded-md hover:bg-slate-300 transition-colors">Abbrechen</button>
-                </div>
-            </div>
-
-            <nav id="subject-nav" class="space-y-1 overflow-y-auto"></nav>
+            <nav id="subject-nav" class="space-y-1 overflow-y-auto custom-scrollbar"></nav>
         </aside>
 
         <!-- --- Main Content --- -->
@@ -82,8 +89,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- STATE MANAGEMENT ---
     const STORAGE_KEY = 'kompetenzPortfolioApp';
     let appState = {
-        data: {},
-        activeSubject: null // null for overview, subject name for subject view
+        students: {}, // studentId: { name: 'Student Name', subjects: { 'FachName': [goals] } }
+        activeStudent: null, // ID of the currently selected student
+        activeSubject: null, // null for overview, subject name for subject view
+        masterSubjects: {} // Global template for goals, copied to new students
     };
 
     // Defines information for each status category, including Tailwind colors and Chart.js colors
@@ -137,12 +146,20 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- DOM SELECTORS ---
     const mainContent = document.getElementById('main-content');
     const subjectNav = document.getElementById('subject-nav');
-    const showAddSubjectBtn = document.getElementById('showAddSubjectBtn');
-    const addSubjectForm = document.getElementById('addSubjectForm');
-    const newSubjectNameInput = document.getElementById('newSubjectName');
-    const addSubjectBtn = document.getElementById('addSubjectBtn');
-    const cancelAddSubjectBtn = document.getElementById('cancelAddSubjectBtn');
+    const studentNav = document.getElementById('student-nav'); // New
+    const showAddSubjectBtn = document.getElementById('showAddSubjectBtn'); // This will be repurposed
+    const addSubjectForm = document.getElementById('addSubjectForm'); // This will be repurposed
+    const newSubjectNameInput = document.getElementById('newSubjectName'); // This will be repurposed
+    const addSubjectBtn = document.getElementById('addSubjectBtn'); // This will be repurposed
+    const cancelAddSubjectBtn = document.getElementById('cancelAddSubjectBtn'); // This will be repurposed
     const showOverviewBtn = document.getElementById('showOverviewBtn');
+
+    // New student management selectors
+    const showAddStudentBtn = document.getElementById('showAddStudentBtn');
+    const addStudentForm = document.getElementById('addStudentForm');
+    const newStudentNameInput = document.getElementById('newStudentName');
+    const addStudentBtn = document.getElementById('addStudentBtn');
+    const cancelAddStudentBtn = document.getElementById('cancelAddStudentBtn');
 
     // --- DATA & STATE FUNCTIONS ---
     // Loads the application state from localStorage or initializes with sample data
@@ -150,46 +167,69 @@ document.addEventListener('DOMContentLoaded', () => {
         const savedState = localStorage.getItem(STORAGE_KEY);
         if (savedState) {
             appState = JSON.parse(savedState);
-            // Ensure old data format is converted to new revision format if necessary
-            Object.keys(appState.data).forEach(subjectName => {
-                appState.data[subjectName] = appState.data[subjectName].map(goal => {
-                    // Check if goal has old 'status' and 'date' properties but no 'revisions' array
-                    if (goal.status && goal.date && !goal.revisions) {
-                        // Convert old format to new revisions array
-                        return { ...goal, revisions: [{ date: goal.date, status: goal.status }] };
-                    }
-                    // If goal already has revisions, or doesn't have old status/date, return as is
-                    return goal;
-                });
-            });
+            // Ensure masterSubjects are present in loaded state or initialize them
+            if (!appState.masterSubjects || Object.keys(appState.masterSubjects).length === 0) {
+                 initializeMasterSubjects();
+            }
         } else {
-            // Default sample data for demonstration, now with revisions
-            appState.data = {
-                'Mathematik': [
-                    // Example goal with only initial revision (vor Korrektur)
-                    { id: 1622548800000, text: 'Bruchrechnung verstehen', category: 'grund', weight: 3, revisions: [{ date: '2025-05-15', status: 'erreicht' }] },
-                    // Example goal with multiple revisions (nach Korrektur)
-                    { id: 1625140800001, text: 'Gleichungen lösen', category: 'grund', weight: 4, revisions: [{ date: '2025-06-01', status: 'nicht' }, { date: '2025-06-20', status: 'teilweise' }] },
-                    { id: 1627732800002, text: 'Komplexe Textaufgaben', category: 'erweitert', weight: 5, revisions: [{ date: '2025-07-05', status: 'nicht' }] },
-                    { id: 1627732800003, text: 'Logarithmen', category: 'erweitert', weight: 3, revisions: [{ date: '2025-07-10', status: 'teilweise' }] },
-                    { id: 1627732800004, text: 'Geometrie Grundlagen', category: 'grund', weight: 2, revisions: [{ date: '2025-06-01', status: 'erreicht' }] }
-                ],
-                'Deutsch': [
-                    { id: 1622548800005, text: 'Rechtschreibung', category: 'grund', weight: 4, revisions: [{ date: '2025-04-10', status: 'erreicht' }] },
-                    { id: 1622548800006, text: 'Grammatik Anwendung', category: 'grund', weight: 3, revisions: [{ date: '2025-05-01', status: 'nicht' }, { date: '2025-05-20', status: 'teilweise' }] },
-                    { id: 1622548800007, text: 'Aufsatz schreiben', category: 'erweitert', weight: 5, revisions: [{ date: '2025-06-15', status: 'nicht' }] }
-                ],
-                'Englisch': [
-                    { id: 1622548800008, text: 'Vokabeln A1', category: 'grund', weight: 3, revisions: [{ date: '2025-03-01', status: 'erreicht' }] },
-                    { id: 1622548800009, text: 'Konversation', category: 'erweitert', weight: 4, revisions: [{ date: '2025-04-05', status: 'teilweise' }] }
-                ]
+            // Default sample data for demonstration
+            initializeMasterSubjects(); // Setup master goals first
+            
+            // Add a default student and clone master goals for them
+            const defaultStudentId = 'student_default';
+            appState.students[defaultStudentId] = {
+                id: defaultStudentId,
+                name: 'Max Mustermann',
+                subjects: cloneMasterGoalsForNewStudent()
             };
-            appState.activeSubject = null; // Start on overview page
+            appState.activeStudent = defaultStudentId;
+            appState.activeSubject = null; // Start on overview page for the default student
         }
-        // Ensure active subject is set to null if it somehow points to a non-existent subject
-        if (Object.keys(appState.data).length > 0 && appState.activeSubject !== null && !appState.data[appState.activeSubject]) {
+        // Ensure active student is set if none is, or if it points to a non-existent one
+        if (!appState.activeStudent || !appState.students[appState.activeStudent]) {
+            appState.activeStudent = Object.keys(appState.students)[0] || null;
+        }
+        // If active subject points to non-existent subject, set to null
+        if (appState.activeStudent && appState.activeSubject !== null && !appState.students[appState.activeStudent].subjects[appState.activeSubject]) {
             appState.activeSubject = null;
         }
+    }
+
+    // Initializes master subjects with sample data
+    function initializeMasterSubjects() {
+        appState.masterSubjects = {
+            'Mathematik': [
+                { text: 'Bruchrechnung verstehen', category: 'grund', weight: 3 },
+                { text: 'Gleichungen lösen', category: 'grund', weight: 4 },
+                { text: 'Komplexe Textaufgaben', category: 'erweitert', weight: 5 },
+                { text: 'Logarithmen', category: 'erweitert', weight: 3 },
+                { text: 'Geometrie Grundlagen', category: 'grund', weight: 2 }
+            ],
+            'Deutsch': [
+                { text: 'Rechtschreibung', category: 'grund', weight: 4 },
+                { text: 'Grammatik Anwendung', category: 'grund', weight: 3 },
+                { text: 'Aufsatz schreiben', category: 'erweitert', weight: 5 }
+            ],
+            'Englisch': [
+                { text: 'Vokabeln A1', category: 'grund', weight: 3 },
+                { text: 'Konversation', category: 'erweitert', weight: 4 }
+            ]
+        };
+    }
+
+    // Creates a deep copy of master goals for a new student
+    function cloneMasterGoalsForNewStudent() {
+        const clonedSubjects = {};
+        for (const subjectName in appState.masterSubjects) {
+            clonedSubjects[subjectName] = appState.masterSubjects[subjectName].map(goal => ({
+                id: Date.now() + Math.random(), // Ensure unique ID for each goal instance
+                text: goal.text,
+                category: goal.category,
+                weight: goal.weight,
+                revisions: [] // Start with no revisions for the new student
+            }));
+        }
+        return clonedSubjects;
     }
 
     // Saves the current application state to localStorage
@@ -197,17 +237,116 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
     }
 
-    // Adds a new subject to the appState
-    function addSubject() {
-        const name = newSubjectNameInput.value.trim();
-        if (name && !appState.data[name]) { // Check if name is not empty and not already exists
-            appState.data[name] = [];
-            appState.activeSubject = name; // Set new subject as active
+    // Adds a new student
+    function addStudent() {
+        const name = newStudentNameInput.value.trim();
+        if (name && !Object.values(appState.students).some(s => s.name === name)) {
+            const studentId = 'student_' + Date.now();
+            appState.students[studentId] = {
+                id: studentId,
+                name: name,
+                subjects: cloneMasterGoalsForNewStudent() // Clone master goals
+            };
+            appState.activeStudent = studentId; // Set new student as active
+            appState.activeSubject = null; // Go to overview for new student
             saveState();
             render();
-            newSubjectNameInput.value = ''; // Clear input
-            addSubjectForm.classList.add('hidden'); // Hide form
+            newStudentNameInput.value = '';
+            addStudentForm.classList.add('hidden');
         }
+    }
+
+    // Removes a student after user confirmation
+    function removeStudent(studentId) {
+        const studentName = appState.students[studentId]?.name;
+        const message = `Sind Sie sicher, dass Sie den Schüler "${studentName}" und alle seine Daten löschen möchten?`;
+        showConfirmationModal(message, () => {
+            delete appState.students[studentId];
+            if (appState.activeStudent === studentId) {
+                appState.activeStudent = Object.keys(appState.students)[0] || null;
+                appState.activeSubject = null;
+            }
+            saveState();
+            render();
+        });
+    }
+
+    // Adds a new subject to the active student's portfolio
+    function addSubject() {
+        if (!appState.activeStudent) return;
+        const name = newSubjectNameInput.value.trim();
+        if (name && !appState.students[appState.activeStudent].subjects[name]) {
+            appState.students[appState.activeStudent].subjects[name] = [];
+            appState.activeSubject = name;
+            saveState();
+            render();
+            newSubjectNameInput.value = '';
+            addSubjectForm.classList.add('hidden');
+        }
+    }
+    
+    // Removes a subject from the active student's portfolio after user confirmation
+    function removeSubject(subjectName) {
+        if (!appState.activeStudent) return;
+        const message = `Sind Sie sicher, dass Sie das Fach "${subjectName}" und alle zugehörigen Lernziele für ${appState.students[appState.activeStudent].name} löschen möchten?`;
+        showConfirmationModal(message, () => {
+            delete appState.students[appState.activeStudent].subjects[subjectName];
+            if (appState.activeSubject === subjectName) {
+                appState.activeSubject = null; // Go to overview after deleting active subject
+            }
+            saveState();
+            render();
+        });
+    }
+
+    // Adds a new learning goal to the active student's active subject
+    function addGoal(goal) {
+        if (!appState.activeStudent || !appState.activeSubject) return;
+        appState.students[appState.activeStudent].subjects[appState.activeSubject].push({ 
+            id: Date.now(),
+            text: goal.text,
+            category: goal.category,
+            weight: goal.weight,
+            revisions: [{ date: goal.date, status: goal.status }] // Initial revision
+        });
+        saveState();
+        render();
+    }
+
+    // Updates a specific revision (initial or final) of a goal for the active student
+    function updateGoalRevision(goalId, newStatus, newDate, isInitialRevision) {
+        if (!appState.activeStudent || !appState.activeSubject) return;
+        const goals = appState.students[appState.activeStudent].subjects[appState.activeSubject];
+        const goalIndex = goals.findIndex(g => g.id === goalId);
+
+        if (goalIndex !== -1) {
+            const goal = goals[goalIndex];
+
+            if (isInitialRevision) {
+                goal.revisions[0] = { date: newDate, status: newStatus };
+            } else {
+                if (goal.revisions.length === 0) { // If no initial revision, add it first
+                    goal.revisions.push({ date: newDate, status: newStatus });
+                } else if (goal.revisions.length === 1) {
+                    goal.revisions.push({ date: newDate, status: newStatus });
+                } else {
+                    goal.revisions[goal.revisions.length - 1] = { date: newDate, status: newStatus };
+                }
+            }
+            // Ensure revisions are sorted by date
+            goal.revisions.sort((a, b) => new Date(a.date) - new Date(b.date));
+            saveState();
+            render();
+        }
+    }
+
+    // Removes a learning goal from the active student's active subject
+    function removeGoal(goalId) {
+        if (!appState.activeStudent || !appState.activeSubject) return;
+        const goals = appState.students[appState.activeStudent].subjects[appState.activeSubject];
+        appState.students[appState.activeStudent].subjects[appState.activeSubject] = goals.filter(g => g.id !== goalId);
+        saveState();
+        render();
     }
     
     // --- MODAL DIALOG for confirmations and updates ---
@@ -253,56 +392,55 @@ document.addEventListener('DOMContentLoaded', () => {
             existingModal.remove();
         }
 
-        const goal = appState.data[appState.activeSubject].find(g => g.id === goalId);
+        if (!appState.activeStudent || !appState.activeSubject) return;
+        const goal = appState.students[appState.activeStudent].subjects[appState.activeSubject].find(g => g.id === goalId);
         if (!goal) return;
 
         const initialRevision = goal.revisions[0];
-        // If there's only one revision, it means no "nach Korrektur" yet.
-        // If there are more, the last one is considered "nach Korrektur".
         const finalRevision = goal.revisions.length > 1 ? goal.revisions[goal.revisions.length - 1] : null;
 
         const modalHTML = `
             <div id="updateStatusModal" class="fixed inset-0 bg-slate-900 bg-opacity-50 flex items-center justify-center z-50">
-                <div class="bg-white p-4 rounded-lg shadow-xl w-full max-w-xs max-h-[50vh] overflow-y-auto flex flex-col"> <!-- Added max-h-[50vh], overflow-y-auto, flex flex-col -->
+                <div class="bg-white p-4 rounded-lg shadow-xl w-full max-w-xs max-h-[70vh] flex flex-col">
                     <h3 class="text-lg font-semibold mb-3 text-slate-800">Lernziel Status aktualisieren</h3>
 
                     <!-- Section for Initial Evaluation -->
-                    <div class="mb-4 border p-4 rounded-md bg-slate-50">
-                        <h4 class="font-medium text-slate-700 mb-3">Beurteilung vor Korrektur</h4>
-                        <div class="space-y-2">
+                    <div class="mb-4 border p-3 rounded-md bg-slate-50"> <!-- Reduced p-4 to p-3 -->
+                        <h4 class="font-medium text-slate-700 mb-2 text-sm">Beurteilung vor Korrektur</h4> <!-- Reduced mb-3 to mb-2, added text-sm -->
+                        <div class="space-y-1.5"> <!-- Reduced space-y-2 to space-y-1.5 -->
                             <div>
-                                <label class="block text-sm font-medium text-slate-600 mb-1">Status:</label>
-                                <select id="initialStatusSelect" class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                                <label class="block text-xs font-medium text-slate-600 mb-1">Status:</label> <!-- Changed text-sm to text-xs -->
+                                <select id="initialStatusSelect" class="w-full p-1.5 border border-slate-300 rounded-md text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"> <!-- Reduced p-2 to p-1.5 -->
                                     <option value="erreicht">Erreicht</option>
                                     <option value="teilweise">Teilweise</option>
                                     <option value="nicht">Nicht erreicht</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-slate-600 mb-1">Datum:</label>
-                                <input type="date" id="initialDateInput" required class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                                <label class="block text-xs font-medium text-slate-600 mb-1">Datum:</label> <!-- Changed text-sm to text-xs -->
+                                <input type="date" id="initialDateInput" required class="w-full p-1.5 border border-slate-300 rounded-md text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"> <!-- Reduced p-2 to p-1.5 -->
                             </div>
-                            <button id="updateInitialBtn" class="w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded-md hover:bg-indigo-700 transition">Aktualisieren (Vor Korrektur)</button>
+                            <button id="updateInitialBtn" class="w-full bg-indigo-600 text-white font-bold py-1.5 px-3 rounded-md text-sm hover:bg-indigo-700 transition">Aktualisieren (Vor Korrektur)</button> <!-- Reduced py-2 to py-1.5, px-4 to px-3, added text-sm -->
                         </div>
                     </div>
 
                     <!-- Section for Final Evaluation -->
-                    <div class="mb-4 border p-4 rounded-md bg-slate-50">
-                        <h4 class="font-medium text-slate-700 mb-3">Beurteilung nach Korrektur</h4>
-                        <div class="space-y-2">
+                    <div class="mb-4 border p-3 rounded-md bg-slate-50"> <!-- Reduced p-4 to p-3 -->
+                        <h4 class="font-medium text-slate-700 mb-2 text-sm">Beurteilung nach Korrektur</h4> <!-- Reduced mb-3 to mb-2, added text-sm -->
+                        <div class="space-y-1.5"> <!-- Reduced space-y-2 to space-y-1.5 -->
                             <div>
-                                <label class="block text-sm font-medium text-slate-600 mb-1">Status:</label>
-                                <select id="finalStatusSelect" class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                                <label class="block text-xs font-medium text-slate-600 mb-1">Status:</label> <!-- Changed text-sm to text-xs -->
+                                <select id="finalStatusSelect" class="w-full p-1.5 border border-slate-300 rounded-md text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"> <!-- Reduced p-2 to p-1.5 -->
                                     <option value="erreicht">Erreicht</option>
                                     <option value="teilweise">Teilweise</option>
                                     <option value="nicht">Nicht erreicht</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-slate-600 mb-1">Datum:</label>
-                                <input type="date" id="finalDateInput" required class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                                <label class="block text-xs font-medium text-slate-600 mb-1">Datum:</label> <!-- Changed text-sm to text-xs -->
+                                <input type="date" id="finalDateInput" required class="w-full p-1.5 border border-slate-300 rounded-md text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"> <!-- Reduced p-2 to p-1.5 -->
                             </div>
-                            <button id="updateFinalBtn" class="w-full bg-emerald-600 text-white font-bold py-2 px-4 rounded-md hover:bg-emerald-700 transition">Aktualisieren (Nach Korrektur)</button>
+                            <button id="updateFinalBtn" class="w-full bg-emerald-600 text-white font-bold py-1.5 px-3 rounded-md text-sm hover:bg-emerald-700 transition">Aktualisieren (Nach Korrektur)</button> <!-- Reduced py-2 to py-1.5, px-4 to px-3, added text-sm -->
                         </div>
                     </div>
 
@@ -325,8 +463,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const modalUpdateCancelBtn = document.getElementById('modalUpdateCancelBtn');
 
         // Populate initial fields
-        initialStatusSelect.value = initialRevision.status;
-        initialDateInput.value = initialRevision.date;
+        if (initialRevision) {
+             initialStatusSelect.value = initialRevision.status;
+             initialDateInput.value = initialRevision.date;
+        } else {
+             // If no initial revision, set today's date as default
+            initialDateInput.valueAsDate = new Date();
+            initialStatusSelect.value = 'nicht'; // Default to 'nicht erreicht' for new goals
+        }
+
 
         // Populate final fields
         if (finalRevision) {
@@ -335,6 +480,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             // If no final revision, set today's date as default for adding one
             finalDateInput.valueAsDate = new Date();
+            finalStatusSelect.value = initialRevision ? initialRevision.status : 'nicht'; // Default to initial or 'nicht'
         }
 
         updateInitialBtn.onclick = () => {
@@ -352,107 +498,73 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    // Removes a subject after user confirmation
-    function removeSubject(subjectName) {
-        const message = `Sind Sie sicher, dass Sie das Fach "${subjectName}" und alle zugehörigen Lernziele löschen möchten?`;
-        showConfirmationModal(message, () => {
-            delete appState.data[subjectName];
-            if (appState.activeSubject === subjectName) {
-                // After deleting, set active subject to the first available or null (overview)
-                appState.activeSubject = Object.keys(appState.data)[0] || null; 
-            }
-            saveState();
-            render();
-        });
-    }
-
-    // Adds a new learning goal to the active subject
-    function addGoal(goal) {
-        if (!appState.activeSubject) return; // Cannot add goal if no subject is active
-        // Initialize with the first revision
-        appState.data[appState.activeSubject].push({ 
-            id: Date.now(),
-            text: goal.text,
-            category: goal.category,
-            weight: goal.weight,
-            revisions: [{ date: goal.date, status: goal.status }]
-        });
-        saveState();
-        render();
-    }
-
-    // Updates a specific revision (initial or final) of a goal
-    function updateGoalRevision(goalId, newStatus, newDate, isInitialRevision) {
-        if (!appState.activeSubject) return;
-        const goals = appState.data[appState.activeSubject];
-        const goalIndex = goals.findIndex(g => g.id === goalId);
-
-        if (goalIndex !== -1) {
-            const goal = appState.data[appState.activeSubject][goalIndex];
-
-            if (isInitialRevision) {
-                // Update the very first revision
-                goal.revisions[0] = { date: newDate, status: newStatus };
-            } else {
-                // This is for "Nach Korrektur".
-                // If only one revision exists (initial), add a second one.
-                // Otherwise, update the last revision.
-                if (goal.revisions.length === 1) {
-                    goal.revisions.push({ date: newDate, status: newStatus });
-                } else {
-                    goal.revisions[goal.revisions.length - 1] = { date: newDate, status: newStatus };
-                }
-            }
-            // Always sort to maintain chronological order, though for 2 entries it's less critical
-            goal.revisions.sort((a, b) => new Date(a.date) - new Date(b.date));
-            saveState();
-            render();
-        }
-    }
-
-    // Removes a learning goal from the active subject
-    function removeGoal(goalId) {
-        if (!appState.activeSubject) return;
-        const goals = appState.data[appState.activeSubject];
-        appState.data[appState.activeSubject] = goals.filter(g => g.id !== goalId);
-        saveState();
-        render();
-    }
-    
     // --- RENDERING FUNCTIONS ---
 
-    // Renders the sidebar with subject navigation and add subject form
+    // Renders the sidebar with student and subject navigation
     function renderSidebar() {
-        subjectNav.innerHTML = ''; // Clear existing subjects
-        Object.keys(appState.data).forEach(name => {
-            const isActive = name === appState.activeSubject;
+        // Render students
+        studentNav.innerHTML = '';
+        Object.values(appState.students).forEach(student => {
+            const isActiveStudent = student.id === appState.activeStudent;
             const container = document.createElement('div');
             container.className = 'flex items-center group';
 
             const button = document.createElement('button');
-            button.className = `flex-1 text-left px-3 py-2 rounded-md transition-colors text-slate-700 ${isActive ? 'bg-indigo-100 text-indigo-700 font-semibold' : 'hover:bg-slate-100'}`;
-            button.textContent = name;
+            button.className = `flex-1 text-left px-3 py-2 rounded-md transition-colors text-slate-700 ${isActiveStudent ? 'bg-indigo-100 text-indigo-700 font-semibold' : 'hover:bg-slate-100'}`;
+            button.textContent = student.name;
             button.onclick = () => {
-                appState.activeSubject = name;
+                appState.activeStudent = student.id;
+                appState.activeSubject = null; // Go to overview when changing student
                 saveState();
                 render();
             };
 
             const deleteBtn = document.createElement('button');
             deleteBtn.className = 'p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-100 rounded-md transition-all opacity-0 group-hover:opacity-100';
-            deleteBtn.title = `Fach "${name}" löschen`;
-            // SVG for delete icon
+            deleteBtn.title = `Schüler "${student.name}" löschen`;
             deleteBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
             deleteBtn.onclick = (e) => {
-                e.stopPropagation(); // Prevent subject selection when deleting
-                removeSubject(name);
+                e.stopPropagation();
+                removeStudent(student.id);
             };
 
             container.appendChild(button);
             container.appendChild(deleteBtn);
-            subjectNav.appendChild(container);
+            studentNav.appendChild(container);
         });
 
+        // Render subjects for the active student
+        subjectNav.innerHTML = '';
+        if (appState.activeStudent && appState.students[appState.activeStudent]) {
+            Object.keys(appState.students[appState.activeStudent].subjects).forEach(name => {
+                const isActiveSubject = name === appState.activeSubject;
+                const container = document.createElement('div');
+                container.className = 'flex items-center group';
+
+                const button = document.createElement('button');
+                button.className = `flex-1 text-left px-3 py-2 rounded-md transition-colors text-slate-700 ${isActiveSubject ? 'bg-indigo-100 text-indigo-700 font-semibold' : 'hover:bg-slate-100'}`;
+                button.textContent = name;
+                button.onclick = () => {
+                    appState.activeSubject = name;
+                    saveState();
+                    render();
+                };
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-100 rounded-md transition-all opacity-0 group-hover:opacity-100';
+                deleteBtn.title = `Fach "${name}" löschen`;
+                deleteBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
+                deleteBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    removeSubject(name);
+                };
+
+                container.appendChild(button);
+                container.appendChild(deleteBtn);
+                subjectNav.appendChild(container);
+            });
+        }
+        
         // Update overview button style based on activeSubject state
         if (appState.activeSubject === null) {
             showOverviewBtn.classList.add('bg-indigo-100', 'text-indigo-700', 'font-semibold');
@@ -463,6 +575,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Renders the main content area, either the subject-specific view or the overview
     function renderMainContent() {
+        if (!appState.activeStudent) {
+            mainContent.innerHTML = `
+                <div class="p-8 bg-white rounded-xl shadow-sm text-center">
+                    <h2 class="text-2xl font-bold mb-4 text-slate-800">Bitte einen Schüler auswählen</h2>
+                    <p class="text-slate-600">Wählen Sie links einen Schüler aus oder fügen Sie einen neuen hinzu, um sein Portfolio anzuzeigen.</p>
+                </div>
+            `;
+            return;
+        }
+
         if (appState.activeSubject === null) {
             renderOverviewPage();
             return;
@@ -474,7 +596,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <!-- Left Column (Form & List) -->
                 <div class="xl:col-span-2 space-y-8">
                     <div class="bg-white p-6 rounded-xl shadow-sm">
-                        <h2 class="text-2xl font-bold mb-4 text-slate-800">Neues Lernziel für ${appState.activeSubject}</h2>
+                        <h2 class="text-2xl font-bold mb-4 text-slate-800">Neues Lernziel für ${appState.students[appState.activeStudent].name} in ${appState.activeSubject}</h2>
                         <form id="goalForm" class="space-y-4">
                             <div>
                                 <label class="block text-sm font-medium text-slate-600 mb-1">Text</label>
@@ -601,11 +723,15 @@ document.addEventListener('DOMContentLoaded', () => {
         renderCharts();
     }
     
-    // Renders the list of learning goals for the active subject
+    // Renders the list of learning goals for the active student's active subject
     function renderGoalList() {
         const goalListContainer = document.getElementById('goalList');
         if (!goalListContainer) return;
-        const goals = appState.data[appState.activeSubject] || [];
+
+        // Get goals for the active student and active subject
+        const goals = appState.activeStudent && appState.activeSubject
+            ? appState.students[appState.activeStudent].subjects[appState.activeSubject] || []
+            : [];
 
         goalListContainer.innerHTML = '';
         if (goals.length === 0) {
@@ -614,11 +740,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Sort goals by date (of the latest revision) in descending order
-        goals.slice().sort((a, b) => new Date(b.revisions[b.revisions.length - 1].date) - new Date(a.revisions[a.revisions.length - 1].date)).forEach(goal => {
-            const latestRevision = goal.revisions[goal.revisions.length - 1];
+        goals.slice().sort((a, b) => {
+            const dateA = a.revisions.length > 0 ? new Date(a.revisions[a.revisions.length - 1].date) : new Date(0);
+            const dateB = b.revisions.length > 0 ? new Date(b.revisions[b.revisions.length - 1].date) : new Date(0);
+            return dateB - dateA;
+        }).forEach(goal => {
+            // Get the latest revision or an empty object if no revisions
+            const latestRevision = goal.revisions.length > 0 ? goal.revisions[goal.revisions.length - 1] : {};
             const statusColor = statusInfo[latestRevision.status]?.color || 'bg-slate-400';
+            const statusLabel = statusInfo[latestRevision.status]?.label || 'Nicht beurteilt';
             const categoryText = goal.category === 'grund' ? 'Grundanforderung' : 'Erweiterte Anforderung';
-            const formattedDate = new Date(latestRevision.date).toLocaleDateString('de-DE');
+            const formattedDate = latestRevision.date ? new Date(latestRevision.date).toLocaleDateString('de-DE') : 'N/A';
 
             const el = document.createElement('div');
             el.className = 'p-3.5 border border-slate-200 rounded-lg bg-slate-50';
@@ -628,7 +760,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="flex-1">
                         <p class="font-semibold text-slate-800">${goal.text}</p>
                         <div class="flex items-center gap-4 text-sm text-slate-500 mt-2 flex-wrap">
-                            <span class="flex items-center gap-1.5 whitespace-nowrap"><span class="w-3 h-3 rounded-full ${statusColor}"></span>${statusInfo[latestRevision.status]?.label}</span>
+                            <span class="flex items-center gap-1.5 whitespace-nowrap"><span class="w-3 h-3 rounded-full ${statusColor}"></span>${statusLabel}</span>
                             <span>${categoryText}</span>
                             <span>Gewicht: ${goal.weight}</span>
                             <span>${formattedDate}</span>
@@ -637,6 +769,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="flex items-center gap-1.5 mt-2">
                             <span class="text-xs text-slate-500">Historie:</span>
                             ${goal.revisions.map(rev => `<span class="w-2.5 h-2.5 rounded-full ${statusInfo[rev.status]?.color}" title="${statusInfo[rev.status]?.label} am ${new Date(rev.date).toLocaleDateString('de-DE')}"></span>`).join('')}
+                            ${goal.revisions.length === 0 ? '<span class="text-xs text-slate-400">Keine Beurteilungen</span>' : ''}
                         </div>
                     </div>
                     <div class="flex flex-col gap-2">
@@ -655,16 +788,20 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Function to get numerical value of a status for comparison
-    function getStatusValue(status) {
-        const values = { 'nicht': 1, 'teilweise': 2, 'erreicht': 3 };
-        return values[status] || 0;
-    }
-
-    // Renders all Chart.js graphs for the active subject
+    // Renders all Chart.js graphs for the active student's active subject
     function renderCharts() {
-        const goals = appState.data[appState.activeSubject] || [];
-        // Updated months array to represent August to July
+        if (!appState.activeStudent || !appState.students[appState.activeStudent] || !appState.activeSubject) {
+            // No student or subject selected, or data is missing, so destroy charts
+            for (const chartKey in charts) {
+                if (charts[chartKey]) {
+                    charts[chartKey].destroy();
+                    charts[chartKey] = null;
+                }
+            }
+            return;
+        }
+
+        const goals = appState.students[appState.activeStudent].subjects[appState.activeSubject] || [];
         const months = ['Aug', 'Sep', 'Okt', 'Nov', 'Dez', 'Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul'];
 
         // Destroy existing charts to prevent memory leaks and rendering issues
@@ -676,7 +813,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // --- Pie Charts (now four: Grund-Initial, Grund-Corrected, Erweitert-Initial, Erweitert-Corrected) ---
-        // Define an array of pie chart configurations
         const pieChartConfigs = [
             { id: 'pieChartGrundInitial', type: 'grund', revisionSource: 'initial', chartKey: 'weightedPieChartGrundInitial', opacityKey: 'pieColorOpaque' },
             { id: 'pieChartGrundCorrected', type: 'grund', revisionSource: 'latest', chartKey: 'weightedPieChartGrundCorrected', opacityKey: 'pieColorTransparent' },
@@ -694,17 +830,15 @@ document.addEventListener('DOMContentLoaded', () => {
             filteredGoals.forEach(goal => {
                 let relevantRevision;
                 if (config.revisionSource === 'initial') {
-                    relevantRevision = goal.revisions[0];
+                    relevantRevision = goal.revisions.length > 0 ? goal.revisions[0] : null;
                 } else if (config.revisionSource === 'latest') {
-                    // For "nach Korrektur", only consider goals that *have* been corrected (more than 1 revision)
-                    // If a goal has only one revision, it hasn't been "corrected" yet.
                     if (goal.revisions.length > 1) {
                          relevantRevision = goal.revisions[goal.revisions.length - 1];
                     } else {
                         return; // Skip this goal if it's for 'latest' but only has initial revision
                     }
                 } else {
-                    return; // Should not happen
+                    return;
                 }
 
                 if (relevantRevision && statusWeightedSums[relevantRevision.status] !== undefined) {
@@ -738,7 +872,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                     const value = context.parsed || 0;
                                     const total = context.dataset.data.reduce((acc, current) => acc + current, 0);
                                     const percentage = total > 0 ? ((value / total) * 100).toFixed(2) : 0;
-                                    // Display weighted points and percentage
                                     return `${label}: ${value.toFixed(1)} gew. Pkt. (${percentage}%)`;
                                 }
                             }
@@ -749,25 +882,24 @@ document.addEventListener('DOMContentLoaded', () => {
             charts[config.chartKey] = new Chart(ctx, pieConfig);
         });
 
-        // --- Timeline charts with percentages (already considers all revisions) ---
+        // --- Timeline charts with percentages ---
         ['grund', 'erweitert'].forEach(type => {
             const canvasId = type === 'grund' ? 'timelineGrund' : 'timelineErweitert';
             const chartInstanceKey = type === 'grund' ? 'timelineGrund' : 'timelineErweitert';
             const ctx = document.getElementById(canvasId)?.getContext('2d');
             if (!ctx) return;
 
-            // Initialize monthly sums for the school year (Aug-Jul)
             const monthlyWeightedSums = Array(12).fill(0).map(() => ({ erreicht: 0, teilweise: 0, nicht: 0 }));
             
-            // Iterate over ALL goals to get initial revision status
             goals.filter(g => g.category === type).forEach(goal => {
-                const initialRevision = goal.revisions[0]; // Use the initial revision for timeline
-                const monthIndex = new Date(initialRevision.date).getMonth(); // 0-11 for Jan-Dec
-                // Map calendar month to school year month index (Aug=0, Sep=1, ..., Jul=11)
-                const schoolYearMonthIndex = (monthIndex - 7 + 12) % 12; // Adjusted for Aug start
-                
-                if(monthlyWeightedSums[schoolYearMonthIndex]) { 
-                    monthlyWeightedSums[schoolYearMonthIndex][initialRevision.status] += goal.weight; // Use goal's weight for the revision
+                if (goal.revisions.length > 0) {
+                    const initialRevision = goal.revisions[0];
+                    const monthIndex = new Date(initialRevision.date).getMonth();
+                    const schoolYearMonthIndex = (monthIndex - 7 + 12) % 12;
+                    
+                    if(monthlyWeightedSums[schoolYearMonthIndex]) { 
+                        monthlyWeightedSums[schoolYearMonthIndex][initialRevision.status] += goal.weight;
+                    }
                 }
             });
             
@@ -789,7 +921,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 fill: true,
                 backgroundColor: statusInfo[status].chartBg,
                 borderColor: statusInfo[status].chartBorder,
-                borderWidth: 2, // Erhöhte Linienbreite für bessere Sichtbarkeit
+                borderWidth: 2,
                 tension: 0.3,
             }));
 
@@ -821,11 +953,10 @@ document.addEventListener('DOMContentLoaded', () => {
             charts[chartInstanceKey] = new Chart(ctx, config);
         });
 
-        // --- Bubble chart with refined aggregation and opacity ---
+        // --- Bubble chart ---
         const ctxB = document.getElementById('bubbleChart')?.getContext('2d');
         if (!ctxB) return;
         
-        // This object will hold the aggregated weighted sums and counts for each bubble cell
         const aggregatedBubbleDataForVisuals = {
             'grund_initial': { 'erreicht': {weight: 0, count: 0}, 'teilweise': {weight: 0, count: 0}, 'nicht': {weight: 0, count: 0} },
             'grund_corrected': { 'erreicht': {weight: 0, count: 0}, 'teilweise': {weight: 0, count: 0}, 'nicht': {weight: 0, count: 0} },
@@ -834,18 +965,17 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         goals.forEach(goal => {
-            const initialRevision = goal.revisions[0];
-            const latestRevision = goal.revisions[goal.revisions.length - 1];
+            const initialRevision = goal.revisions.length > 0 ? goal.revisions[0] : null;
+            const latestRevision = goal.revisions.length > 0 ? goal.revisions[goal.revisions.length - 1] : null;
             const isCorrected = goal.revisions.length > 1;
 
-            // Add to 'initial' bucket based on first revision
-            const initialBucketKey = `${goal.category}_initial`;
-            aggregatedBubbleDataForVisuals[initialBucketKey][initialRevision.status].weight += goal.weight;
-            aggregatedBubbleDataForVisuals[initialBucketKey][initialRevision.status].count += 1;
+            if (initialRevision) {
+                const initialBucketKey = `${goal.category}_initial`;
+                aggregatedBubbleDataForVisuals[initialBucketKey][initialRevision.status].weight += goal.weight;
+                aggregatedBubbleDataForVisuals[initialBucketKey][initialRevision.status].count += 1;
+            }
 
-
-            // If corrected, also add to 'corrected' bucket based on latest revision
-            if (isCorrected) {
+            if (isCorrected && latestRevision) {
                 const correctedBucketKey = `${goal.category}_corrected`;
                 aggregatedBubbleDataForVisuals[correctedBucketKey][latestRevision.status].weight += goal.weight;
                 aggregatedBubbleDataForVisuals[correctedBucketKey][latestRevision.status].count += 1;
@@ -855,10 +985,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const bubbleChartDatasets = [];
         const xPositions = { 'grund_initial': 0, 'grund_corrected': 1, 'erweitert_initial': 2, 'erweitert_corrected': 3 };
         const yPositions = { 'nicht': 0, 'teilweise': 1, 'erreicht': 2 };
-        const jitterAmount = 0.2; // Small random offset for better visual separation
+        const jitterAmount = 0.2;
 
-        // Helper to create a single dataset for a given category/type (e.g., 'grund_initial')
-        function createBubbleDataset(categoryType, pointStyle, opacityKey, legendLabelBase) { // legendLabelBase instead of legendLabelDetails
+        function createBubbleDataset(categoryType, pointStyle, opacityKey, legendLabelBase) {
             const dataPoints = [];
             const backgroundColors = [];
             const borderColors = [];
@@ -870,8 +999,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     dataPoints.push({
                         x: xPositions[categoryType] + (Math.random() - 0.5) * jitterAmount,
                         y: yPositions[status] + (Math.random() - 0.5) * jitterAmount,
-                        r: Math.sqrt(sumWeight) * 8 + 4, // Radius based on weighted sum
-                        // Detailed label for tooltip
+                        r: Math.sqrt(sumWeight) * 8 + 4,
                         label: `${legendLabelBase.trim()} - ${statusInfo[status].label}: ${sumWeight.toFixed(1)} gew. Pkt. (${count} Ziele)`
                     });
                     backgroundColors.push(statusInfo[status][opacityKey]);
@@ -881,71 +1009,62 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (dataPoints.length > 0) {
                 bubbleChartDatasets.push({
-                    label: legendLabelBase, // Use the base label without opacity percentage
+                    label: legendLabelBase,
                     pointStyle: pointStyle,
                     backgroundColor: backgroundColors,
-                    borderColor: borderColors, // Consistent border color per data point group
-                    borderWidth: 0, // No border as per user request
+                    borderColor: borderColors,
+                    borderWidth: 0,
                     data: dataPoints
                 });
             }
         }
 
-        // 1. Grundanforderungen vor Korrektur (Kreis, 100% Opazität)
         createBubbleDataset('grund_initial', 'circle', 'chartBgOpaque', 'GA vor Korr.');
-
-        // 2. Grundanforderungen nach Korrektur (Kreis, 10% Opazität)
         createBubbleDataset('grund_corrected', 'circle', 'chartBgTransparent', 'GA nach Korr.');
-
-        // 3. Erweiterte Anforderungen vor Korrektur (Quadrat, 100% Opazität)
         createBubbleDataset('erweitert_initial', 'rect', 'chartBgOpaque', 'EA vor Korr.');
-
-        // 4. Erweiterte Anforderungen nach Korrektur (Quadrat, 10% Opazität)
         createBubbleDataset('erweitert_corrected', 'rect', 'chartBgTransparent', 'EA nach Korr.');
 
 
         const configB = {
             type: 'bubble',
-            data: { datasets: bubbleChartDatasets }, // Use the created datasets array
+            data: { datasets: bubbleChartDatasets },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 scales: {
                     x: {
-                        min: -0.5, // Start slightly before the first tick
-                        max: 3.5, // End slightly after the last tick
+                        min: -0.5,
+                        max: 3.5,
                         ticks: {
                             callback: function(value, index, values) {
-                                // Map numerical x-values to descriptive labels
                                 if (value === 0) return 'GA vor Korr.';
                                 if (value === 1) return 'GA nach Korr.';
                                 if (value === 2) return 'EA vor Korr.';
                                 if (value === 3) return 'EA nach Korr.';
                                 return '';
                             },
-                            display: true, // Show labels for categories
-                            stepSize: 1 // Ensure ticks are at integer positions for clear categories
+                            display: true,
+                            stepSize: 1
                         },
                         grid: {
-                            display: false // No grid lines to keep the background clean
+                            display: false
                         }
                     },
                     y: {
-                        min: -0.5, // Start slightly before the first tick
-                        max: 2.5, // End slightly after the last tick
+                        min: -0.5,
+                        max: 2.5,
                         ticks: {
                             callback: function(value, index, values) {
-                                // Map numerical y-values to descriptive labels for status
                                 if (value === 0) return 'Nicht erreicht';
                                 if (value === 1) return 'Teilweise';
                                 if (value === 2) return 'Erreicht';
                                 return '';
                             },
-                            display: true, // Show labels for statuses
-                            stepSize: 1 // Ensure ticks are at integer positions for clear statuses
+                            display: true,
+                            stepSize: 1
                         },
                         grid: {
-                            display: false // No grid lines
+                            display: false
                         }
                     }
                 },
@@ -953,15 +1072,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     legend: {
                         position: 'bottom',
                         labels: {
-                            usePointStyle: true, // Make the legend use the point styles (circle/rect)
+                            usePointStyle: true,
                             generateLabels: function(chart) {
                                 const data = chart.data;
                                 if (data.datasets.length) {
                                     return data.datasets.map((dataset, i) => {
                                         return {
-                                            text: dataset.label, // Use the updated label without opacity percentage
-                                            fillStyle: dataset.backgroundColor[0], // Take the first color as representative
-                                            strokeStyle: dataset.borderColor[0], // Take the first border color
+                                            text: dataset.label,
+                                            fillStyle: dataset.backgroundColor[0],
+                                            strokeStyle: dataset.borderColor[0],
                                             pointStyle: dataset.pointStyle,
                                             hidden: !chart.isDatasetVisible(i),
                                             index: i
@@ -975,7 +1094,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                // Access the custom label stored in the data point for detailed info
                                 return context.raw.label;
                             }
                         }
@@ -986,13 +1104,38 @@ document.addEventListener('DOMContentLoaded', () => {
         charts.bubbleChart = new Chart(ctxB, configB);
     }
     
-    // Renders the overview page displaying a summary of each subject's progress
+    // Renders the overview page displaying a summary of the active student's progress
     function renderOverviewPage() {
+        if (!appState.activeStudent) {
+            mainContent.innerHTML = `
+                <div class="p-8 bg-white rounded-xl shadow-sm text-center">
+                    <h2 class="text-2xl font-bold mb-4 text-slate-800">Bitte einen Schüler auswählen</h2>
+                    <p class="text-slate-600">Wählen Sie links einen Schüler aus oder fügen Sie einen neuen hinzu, um sein Portfolio anzuzeigen.</p>
+                </div>
+            `;
+            return;
+        }
+
+        const student = appState.students[appState.activeStudent];
+        const subjects = student.subjects;
+
         mainContent.innerHTML = `
             <div class="p-8 bg-white rounded-xl shadow-sm">
-                <h2 class="text-3xl font-bold mb-6 text-slate-800">Übersicht Lernstand</h2>
+                <h2 class="text-3xl font-bold mb-6 text-slate-800">Übersicht Lernstand für ${student.name}</h2>
                 <div id="subjectOverviewGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <!-- Subject overview cards will be injected here -->
+                </div>
+                <div class="flex justify-start mt-6">
+                     <button id="addSubjectInOverviewBtn" class="px-4 py-2 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 transition">
+                         Neues Fach hinzufügen
+                     </button>
+                </div>
+                <div id="addSubjectFormInOverview" class="hidden mt-4 p-3 bg-slate-50 rounded-lg transition-all max-w-sm">
+                    <input type="text" id="newSubjectNameInOverview" placeholder="Name des Fachs..." class="w-full px-2 py-1.5 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    <div class="flex gap-2 mt-2">
+                        <button id="addSubjectBtnInOverview" class="flex-1 px-3 py-1.5 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700 transition-colors">Hinzufügen</button>
+                        <button id="cancelAddSubjectBtnInOverview" class="flex-1 px-3 py-1.5 bg-slate-200 text-slate-700 text-sm rounded-md hover:bg-slate-300 transition-colors">Abbrechen</button>
+                    </div>
                 </div>
             </div>
         `;
@@ -1000,36 +1143,30 @@ document.addEventListener('DOMContentLoaded', () => {
         const overviewGrid = document.getElementById('subjectOverviewGrid');
         if (!overviewGrid) return;
 
-        if (Object.keys(appState.data).length === 0) {
-            overviewGrid.innerHTML = `<p class="text-slate-500 text-center col-span-full py-10">Noch keine Fächer erfasst.</p>`;
-            return;
+        if (Object.keys(subjects).length === 0) {
+            overviewGrid.innerHTML = `<p class="text-slate-500 text-center col-span-full py-10">Noch keine Fächer für ${student.name} erfasst.</p>`;
         }
 
-        Object.keys(appState.data).forEach(subjectName => {
-            const goals = appState.data[subjectName];
+        Object.keys(subjects).forEach(subjectName => {
+            const goals = subjects[subjectName];
 
-            // --- HIER WERDEN DIE GEWICHTETEN PUNKTEN FÜR GRUNDANFORDERUNGEN BERECHNET ---
             const grundGoals = goals.filter(g => g.category === 'grund');
             const totalWeightedGrund = grundGoals.reduce((sum, g) => sum + g.weight, 0);
-            // Only count 'erreicht' goals from their latest revision
-            const achievedWeightedGrund = grundGoals.filter(g => g.revisions[g.revisions.length - 1].status === 'erreicht').reduce((sum, g) => sum + g.weight, 0);
+            const achievedWeightedGrund = grundGoals.filter(g => g.revisions.length > 0 && g.revisions[g.revisions.length - 1].status === 'erreicht').reduce((sum, g) => sum + g.weight, 0);
             const percentageGrund = totalWeightedGrund > 0 ? ((achievedWeightedGrund / totalWeightedGrund) * 100).toFixed(0) : 0;
 
-            // --- HIER WERDEN DIE GEWICHTETEN PUNKTEN FÜR ERWEITERTE ANFORDERUNGEN BERECHNET ---
             const erweitertGoals = goals.filter(g => g.category === 'erweitert');
             const totalWeightedErweitert = erweitertGoals.reduce((sum, g) => sum + g.weight, 0);
-            // Only count 'erreicht' goals from their latest revision
-            const achievedWeightedErweitert = erweitertGoals.filter(g => g.revisions[g.revisions.length - 1].status === 'erreicht').reduce((sum, g) => sum + g.weight, 0);
+            const achievedWeightedErweitert = erweitertGoals.filter(g => g.revisions.length > 0 && g.revisions[g.revisions.length - 1].status === 'erreicht').reduce((sum, g) => sum + g.weight, 0);
             const percentageErweitert = totalWeightedErweitert > 0 ? ((achievedWeightedErweitert / totalWeightedErweitert) * 100).toFixed(0) : 0;
             
-            // Determine progress bar colors
             const progressColorGrund = percentageGrund >= 75 ? 'bg-emerald-500' : (percentageGrund >= 40 ? 'bg-amber-500' : 'bg-red-500');
             const progressColorErweitert = percentageErweitert >= 75 ? 'bg-emerald-500' : (percentageErweitert >= 40 ? 'bg-amber-500' : 'bg-red-500');
 
             const card = document.createElement('div');
             card.className = `bg-slate-50 p-6 rounded-lg shadow-sm border border-slate-200 cursor-pointer hover:shadow-md transition-shadow`;
             card.onclick = () => {
-                appState.activeSubject = subjectName; // Switch to this subject's detail view
+                appState.activeSubject = subjectName;
                 saveState();
                 render();
             };
@@ -1060,6 +1197,52 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             overviewGrid.appendChild(card);
         });
+
+        // Event listeners for Add Subject from overview page
+        const addSubjectInOverviewBtn = document.getElementById('addSubjectInOverviewBtn');
+        const addSubjectFormInOverview = document.getElementById('addSubjectFormInOverview');
+        const newSubjectNameInOverview = document.getElementById('newSubjectNameInOverview');
+        const addSubjectBtnInOverview = document.getElementById('addSubjectBtnInOverview');
+        const cancelAddSubjectBtnInOverview = document.getElementById('cancelAddSubjectBtnInOverview');
+
+        if (addSubjectInOverviewBtn) {
+            addSubjectInOverviewBtn.addEventListener('click', () => {
+                addSubjectFormInOverview.classList.remove('hidden');
+                newSubjectNameInOverview.focus();
+            });
+        }
+        if (cancelAddSubjectBtnInOverview) {
+            cancelAddSubjectBtnInOverview.addEventListener('click', () => {
+                addSubjectFormInOverview.classList.add('hidden');
+                newSubjectNameInOverview.value = '';
+            });
+        }
+        if (addSubjectBtnInOverview) {
+            addSubjectBtnInOverview.addEventListener('click', () => {
+                const name = newSubjectNameInOverview.value.trim();
+                if (name && appState.activeStudent && !appState.students[appState.activeStudent].subjects[name]) {
+                    appState.students[appState.activeStudent].subjects[name] = []; // Add empty subject
+                    saveState();
+                    render();
+                    newSubjectNameInOverview.value = '';
+                    addSubjectFormInOverview.classList.add('hidden');
+                }
+            });
+        }
+        if (newSubjectNameInOverview) {
+            newSubjectNameInOverview.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    const name = newSubjectNameInOverview.value.trim();
+                    if (name && appState.activeStudent && !appState.students[appState.activeStudent].subjects[name]) {
+                        appState.students[appState.activeStudent].subjects[name] = [];
+                        saveState();
+                        render();
+                        newSubjectNameInOverview.value = '';
+                        addSubjectFormInOverview.classList.add('hidden');
+                    }
+                }
+            });
+        }
     }
 
     // --- MASTER RENDER & EVENT LISTENERS ---
@@ -1069,25 +1252,23 @@ document.addEventListener('DOMContentLoaded', () => {
         renderMainContent();
     }
 
-    // Event listener for showing the add subject form
-    showAddSubjectBtn.addEventListener('click', () => {
-        addSubjectForm.classList.remove('hidden');
-        newSubjectNameInput.focus();
+    // Event listeners for student management
+    showAddStudentBtn.addEventListener('click', () => {
+        addStudentForm.classList.remove('hidden');
+        newStudentNameInput.focus();
     });
-    // Event listener for canceling add subject
-    cancelAddSubjectBtn.addEventListener('click', () => {
-        addSubjectForm.classList.add('hidden');
-        newSubjectNameInput.value = '';
+    cancelAddStudentBtn.addEventListener('click', () => {
+        addStudentForm.classList.add('hidden');
+        newStudentNameInput.value = '';
     });
-    // Event listener for adding a subject
-    addSubjectBtn.addEventListener('click', addSubject);
-    // Event listener for adding a subject with Enter key
-    newSubjectNameInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') addSubject();
+    addStudentBtn.addEventListener('click', addStudent);
+    newStudentNameInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') addStudent();
     });
+
     // Event listener for the "Übersicht" button
     showOverviewBtn.addEventListener('click', () => {
-        appState.activeSubject = null; // Set active subject to null to show overview
+        appState.activeSubject = null; // Set active subject to null to show overview for current student
         saveState();
         render();
     });
