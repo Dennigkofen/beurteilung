@@ -263,13 +263,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const modalHTML = `
             <div id="updateStatusModal" class="fixed inset-0 bg-slate-900 bg-opacity-50 flex items-center justify-center z-50">
-                <div class="bg-white p-4 rounded-lg shadow-xl w-full max-w-xs"> <!-- Changed p-6 to p-4 -->
-                    <h3 class="text-lg font-semibold mb-3 text-slate-800">Lernziel Status aktualisieren</h3> <!-- Changed mb-4 to mb-3 -->
+                <div class="bg-white p-4 rounded-lg shadow-xl w-full max-w-xs max-h-[50vh] overflow-y-auto flex flex-col"> <!-- Added max-h-[50vh], overflow-y-auto, flex flex-col -->
+                    <h3 class="text-lg font-semibold mb-3 text-slate-800">Lernziel Status aktualisieren</h3>
 
                     <!-- Section for Initial Evaluation -->
-                    <div class="mb-4 border p-4 rounded-md bg-slate-50"> <!-- Changed mb-6 to mb-4 -->
+                    <div class="mb-4 border p-4 rounded-md bg-slate-50">
                         <h4 class="font-medium text-slate-700 mb-3">Beurteilung vor Korrektur</h4>
-                        <div class="space-y-2"> <!-- Changed space-y-3 to space-y-2 -->
+                        <div class="space-y-2">
                             <div>
                                 <label class="block text-sm font-medium text-slate-600 mb-1">Status:</label>
                                 <select id="initialStatusSelect" class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
@@ -287,9 +287,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
 
                     <!-- Section for Final Evaluation -->
-                    <div class="mb-4 border p-4 rounded-md bg-slate-50"> <!-- Changed mb-6 to mb-4 -->
+                    <div class="mb-4 border p-4 rounded-md bg-slate-50">
                         <h4 class="font-medium text-slate-700 mb-3">Beurteilung nach Korrektur</h4>
-                        <div class="space-y-2"> <!-- Changed space-y-3 to space-y-2 -->
+                        <div class="space-y-2">
                             <div>
                                 <label class="block text-sm font-medium text-slate-600 mb-1">Status:</label>
                                 <select id="finalStatusSelect" class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
@@ -306,7 +306,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     </div>
 
-                    <div class="flex justify-end gap-3 mt-3"> <!-- Changed mt-4 to mt-3 -->
+                    <div class="flex justify-end gap-3 mt-3">
                         <button type="button" id="modalUpdateCancelBtn" class="px-4 py-2 bg-slate-200 text-slate-800 rounded-md hover:bg-slate-300 transition">Schliessen</button>
                     </div>
                 </div>
