@@ -44,6 +44,14 @@
                 <h1 class="text-xl font-bold text-slate-900">Kompetenz-Portfolio</h1>
             </div>
 
+            <!-- Overview Button -->
+            <div class="mb-4">
+                <button id="showOverviewBtn" class="w-full flex items-center gap-2 px-3 py-2 rounded-md transition-colors text-slate-700 hover:bg-slate-100">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="M18.7 8.3L12 15l-3.3-3.3c-.6-.6-1.4-.6-2-.1-.6.5-.7 1.4-.2 2L10 18l10-10"></path></svg>
+                    <span class="font-semibold">Übersicht</span>
+                </button>
+            </div>
+
             <div class="flex justify-between items-center mb-3">
                 <h2 class="font-semibold text-slate-500 text-sm uppercase tracking-wider">Fächer</h2>
                 <button id="showAddSubjectBtn" class="p-1 text-indigo-600 hover:bg-indigo-100 rounded-lg transition-colors" title="Neues Fach hinzufügen">
@@ -75,19 +83,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const STORAGE_KEY = 'kompetenzPortfolioApp';
     let appState = {
         data: {},
-        activeSubject: null
+        activeSubject: null // null for overview, subject name for subject view
     };
 
+    // Defines information for each status category, including Tailwind colors and Chart.js colors
     const statusInfo = {
-        erreicht: { label: 'Erreicht', color: 'bg-emerald-500', chartBg: 'rgba(52, 211, 153, 0.4)', chartBorder: 'rgba(16, 185, 129, 1)', chartBubble: 'rgba(52, 211, 153, 0.7)' },
-        teilweise: { label: 'Teilweise', color: 'bg-amber-500', chartBg: 'rgba(251, 191, 36, 0.4)', chartBorder: 'rgba(245, 158, 11, 1)', chartBubble: 'rgba(251, 191, 36, 0.7)' },
-        nicht: { label: 'Nicht erreicht', color: 'bg-red-500', chartBg: 'rgba(248, 113, 113, 0.4)', chartBorder: 'rgba(239, 68, 68, 1)', chartBubble: 'rgba(248, 113, 113, 0.7)' }
+        erreicht: { label: 'Erreicht', color: 'bg-emerald-500', chartBg: 'rgba(52, 211, 153, 0.4)', chartBorder: 'rgba(16, 185, 129, 1)', chartBubble: 'rgba(52, 211, 153, 0.7)', pieColor: '#34d399' }, // emerald-500
+        teilweise: { label: 'Teilweise', color: 'bg-amber-500', chartBg: 'rgba(251, 191, 36, 0.4)', chartBorder: 'rgba(245, 158, 11, 1)', chartBubble: 'rgba(251, 191, 36, 0.7)', pieColor: '#f59e0b' }, // amber-500
+        nicht: { label: 'Nicht erreicht', color: 'bg-red-500', chartBg: 'rgba(248, 113, 113, 0.4)', chartBorder: 'rgba(239, 68, 68, 1)', chartBubble: 'rgba(248, 113, 113, 0.7)', pieColor: '#ef4444' } // red-500
     };
 
+    // Holds Chart.js instances to allow for their destruction before re-rendering
     let charts = {
         timelineGrund: null,
         timelineErweitert: null,
         bubbleChart: null,
+        pieChart: null,
     };
 
     // --- DOM SELECTORS ---
@@ -98,48 +109,62 @@ document.addEventListener('DOMContentLoaded', () => {
     const newSubjectNameInput = document.getElementById('newSubjectName');
     const addSubjectBtn = document.getElementById('addSubjectBtn');
     const cancelAddSubjectBtn = document.getElementById('cancelAddSubjectBtn');
+    const showOverviewBtn = document.getElementById('showOverviewBtn');
 
     // --- DATA & STATE FUNCTIONS ---
+    // Loads the application state from localStorage or initializes with sample data
     function loadState() {
         const savedState = localStorage.getItem(STORAGE_KEY);
         if (savedState) {
             appState = JSON.parse(savedState);
         } else {
-            // Default sample data
+            // Default sample data for demonstration
             appState.data = {
                 'Mathematik': [
                     { id: 1622548800000, text: 'Bruchrechnung verstehen', category: 'grund', weight: 3, status: 'erreicht', date: '2025-05-15' },
                     { id: 1625140800001, text: 'Gleichungen lösen', category: 'grund', weight: 4, status: 'teilweise', date: '2025-06-20' },
-                    { id: 1627732800002, text: 'Komplexe Textaufgaben', category: 'erweitert', weight: 5, status: 'nicht', date: '2025-07-05' }
+                    { id: 1627732800002, text: 'Komplexe Textaufgaben', category: 'erweitert', weight: 5, status: 'nicht', date: '2025-07-05' },
+                    { id: 1627732800003, text: 'Logarithmen', category: 'erweitert', weight: 3, status: 'teilweise', date: '2025-07-10' },
+                    { id: 1627732800004, text: 'Geometrie Grundlagen', category: 'grund', weight: 2, status: 'erreicht', date: '2025-06-01' }
                 ],
                 'Deutsch': [
-                    { id: 1622548800003, text: 'Rechtschreibung', category: 'grund', weight: 4, status: 'erreicht', date: '2025-04-10' },
+                    { id: 1622548800005, text: 'Rechtschreibung', category: 'grund', weight: 4, status: 'erreicht', date: '2025-04-10' },
+                    { id: 1622548800006, text: 'Grammatik Anwendung', category: 'grund', weight: 3, status: 'teilweise', date: '2025-05-20' },
+                    { id: 1622548800007, text: 'Aufsatz schreiben', category: 'erweitert', weight: 5, status: 'nicht', date: '2025-06-15' }
                 ],
+                'Englisch': [
+                    { id: 1622548800008, text: 'Vokabeln A1', category: 'grund', weight: 3, status: 'erreicht', date: '2025-03-01' },
+                    { id: 1622548800009, text: 'Konversation', category: 'erweitert', weight: 4, status: 'teilweise', date: '2025-04-05' }
+                ]
             };
-            appState.activeSubject = 'Mathematik';
+            appState.activeSubject = null; // Start on overview page
         }
-        if (!appState.activeSubject && Object.keys(appState.data).length > 0) {
-            appState.activeSubject = Object.keys(appState.data)[0];
+        // Ensure active subject is set to null if it somehow points to a non-existent subject
+        if (Object.keys(appState.data).length > 0 && appState.activeSubject !== null && !appState.data[appState.activeSubject]) {
+            appState.activeSubject = null;
         }
     }
 
+    // Saves the current application state to localStorage
     function saveState() {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
     }
 
+    // Adds a new subject to the appState
     function addSubject() {
         const name = newSubjectNameInput.value.trim();
-        if (name && !appState.data[name]) {
+        if (name && !appState.data[name]) { // Check if name is not empty and not already exists
             appState.data[name] = [];
-            appState.activeSubject = name;
+            appState.activeSubject = name; // Set new subject as active
             saveState();
             render();
-            newSubjectNameInput.value = '';
-            addSubjectForm.classList.add('hidden');
+            newSubjectNameInput.value = ''; // Clear input
+            addSubjectForm.classList.add('hidden'); // Hide form
         }
     }
     
     // --- MODAL DIALOG for confirmations ---
+    // Displays a custom confirmation modal instead of native alert/confirm
     function showConfirmationModal(message, onConfirm) {
         // Remove existing modal first to prevent duplicates
         const existingModal = document.getElementById('confirmationModal');
@@ -173,26 +198,29 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-
+    // Removes a subject after user confirmation
     function removeSubject(subjectName) {
         const message = `Sind Sie sicher, dass Sie das Fach "${subjectName}" und alle zugehörigen Lernziele löschen möchten?`;
         showConfirmationModal(message, () => {
             delete appState.data[subjectName];
             if (appState.activeSubject === subjectName) {
-                appState.activeSubject = Object.keys(appState.data)[0] || null;
+                // After deleting, set active subject to the first available or null (overview)
+                appState.activeSubject = Object.keys(appState.data)[0] || null; 
             }
             saveState();
             render();
         });
     }
 
+    // Adds a new learning goal to the active subject
     function addGoal(goal) {
-        if (!appState.activeSubject) return;
+        if (!appState.activeSubject) return; // Cannot add goal if no subject is active
         appState.data[appState.activeSubject].push({ ...goal, id: Date.now() });
         saveState();
         render();
     }
 
+    // Removes a learning goal from the active subject
     function removeGoal(goalId) {
         if (!appState.activeSubject) return;
         const goals = appState.data[appState.activeSubject];
@@ -203,8 +231,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // --- RENDERING FUNCTIONS ---
 
+    // Renders the sidebar with subject navigation and add subject form
     function renderSidebar() {
-        subjectNav.innerHTML = '';
+        subjectNav.innerHTML = ''; // Clear existing subjects
         Object.keys(appState.data).forEach(name => {
             const isActive = name === appState.activeSubject;
             const container = document.createElement('div');
@@ -222,9 +251,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const deleteBtn = document.createElement('button');
             deleteBtn.className = 'p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-100 rounded-md transition-all opacity-0 group-hover:opacity-100';
             deleteBtn.title = `Fach "${name}" löschen`;
+            // SVG for delete icon
             deleteBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
             deleteBtn.onclick = (e) => {
-                e.stopPropagation();
+                e.stopPropagation(); // Prevent subject selection when deleting
                 removeSubject(name);
             };
 
@@ -232,24 +262,29 @@ document.addEventListener('DOMContentLoaded', () => {
             container.appendChild(deleteBtn);
             subjectNav.appendChild(container);
         });
+
+        // Update overview button style based on activeSubject state
+        if (appState.activeSubject === null) {
+            showOverviewBtn.classList.add('bg-indigo-100', 'text-indigo-700', 'font-semibold');
+        } else {
+            showOverviewBtn.classList.remove('bg-indigo-100', 'text-indigo-700', 'font-semibold');
+        }
     }
 
+    // Renders the main content area, either the subject-specific view or the overview
     function renderMainContent() {
-        if (!appState.activeSubject) {
-            mainContent.innerHTML = `
-                <div class="text-center p-10 bg-white rounded-xl shadow-sm">
-                    <h2 class="text-2xl font-bold text-slate-800">Willkommen!</h2>
-                    <p class="text-slate-500 mt-2">Wählen Sie ein Fach aus oder fügen Sie ein neues hinzu, um zu beginnen.</p>
-                </div>`;
+        if (appState.activeSubject === null) {
+            renderOverviewPage();
             return;
         }
 
+        // Subject-specific view HTML structure
         mainContent.innerHTML = `
             <div class="grid grid-cols-1 xl:grid-cols-5 gap-8">
                 <!-- Left Column (Form & List) -->
                 <div class="xl:col-span-2 space-y-8">
                     <div class="bg-white p-6 rounded-xl shadow-sm">
-                        <h2 class="text-2xl font-bold mb-4 text-slate-800">Neues Lernziel</h2>
+                        <h2 class="text-2xl font-bold mb-4 text-slate-800">Neues Lernziel für ${appState.activeSubject}</h2>
                         <form id="goalForm" class="space-y-4">
                             <div>
                                 <label class="block text-sm font-medium text-slate-600 mb-1">Text</label>
@@ -294,6 +329,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 <!-- Right Column (Charts) -->
                 <div class="xl:col-span-3 space-y-8">
                     <div class="bg-white p-6 rounded-xl shadow-sm">
+                        <h3 class="text-xl font-bold mb-4 text-center text-slate-800">Lernstand Übersicht</h3>
+                        <div class="h-64 mx-auto">
+                            <canvas id="pieChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm">
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             <div>
                                 <h3 class="text-xl font-bold mb-4 text-center text-slate-800">Entwicklung Grundanforderungen</h3>
@@ -316,7 +357,8 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
         
         const goalForm = document.getElementById('goalForm');
-        goalForm.querySelector('input[name="date"]').valueAsDate = new Date();
+        // Set default date to today
+        goalForm.querySelector('input[name="date"]').valueAsDate = new Date(); 
         goalForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const formData = new FormData(e.target);
@@ -324,18 +366,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 text: formData.get('text'),
                 category: formData.get('category'),
                 status: formData.get('status'),
-                weight: +formData.get('weight'),
+                weight: +formData.get('weight'), // Convert to number
                 date: formData.get('date'),
             };
             addGoal(newGoal);
-            e.target.reset();
-            goalForm.querySelector('input[name="date"]').valueAsDate = new Date();
+            e.target.reset(); // Clear form
+            goalForm.querySelector('input[name="date"]').valueAsDate = new Date(); // Reset date
         });
 
         renderGoalList();
         renderCharts();
     }
     
+    // Renders the list of learning goals for the active subject
     function renderGoalList() {
         const goalListContainer = document.getElementById('goalList');
         if (!goalListContainer) return;
@@ -347,6 +390,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // Sort goals by date in descending order
         goals.slice().sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(goal => {
             const el = document.createElement('div');
             el.className = 'p-3.5 border border-slate-200 rounded-lg bg-slate-50';
@@ -375,9 +419,62 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Renders all Chart.js graphs for the active subject
     function renderCharts() {
         const goals = appState.data[appState.activeSubject] || [];
         const months = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+
+        // Destroy existing charts to prevent memory leaks and rendering issues
+        for (const chartKey in charts) {
+            if (charts[chartKey]) {
+                charts[chartKey].destroy();
+                charts[chartKey] = null;
+            }
+        }
+
+        // --- Pie Chart for current subject status ---
+        const ctxP = document.getElementById('pieChart')?.getContext('2d');
+        if (ctxP) {
+            const statusCounts = { erreicht: 0, teilweise: 0, nicht: 0 };
+            goals.forEach(goal => {
+                statusCounts[goal.status]++;
+            });
+
+            const pieData = {
+                labels: Object.values(statusInfo).map(s => s.label),
+                datasets: [{
+                    data: Object.keys(statusInfo).map(status => statusCounts[status]),
+                    backgroundColor: Object.values(statusInfo).map(s => s.pieColor),
+                    hoverOffset: 4
+                }]
+            };
+
+            const pieConfig = {
+                type: 'pie',
+                data: pieData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed || 0;
+                                    const total = context.dataset.data.reduce((acc, current) => acc + current, 0);
+                                    const percentage = total > 0 ? ((value / total) * 100).toFixed(2) : 0;
+                                    return `${label}: ${value} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+            charts.pieChart = new Chart(ctxP, pieConfig);
+        }
 
         // Timeline charts with percentages
         ['grund', 'erweitert'].forEach(type => {
@@ -440,33 +537,33 @@ document.addEventListener('DOMContentLoaded', () => {
                     interaction: { mode: 'index', intersect: false },
                 }
             };
-            if (charts[chartInstanceKey]) charts[chartInstanceKey].destroy();
             charts[chartInstanceKey] = new Chart(ctx, config);
         });
 
-        // --- MODIFICATION START: Bubble chart with 'rect' for extended requirements ---
+        // --- Bubble chart with 'rect' for extended requirements ---
         const ctxB = document.getElementById('bubbleChart')?.getContext('2d');
         if (!ctxB) return;
         
         const bubbleDatasets = [];
-        // Use 'rect' (rectangle/square) for extended requirements as it's more reliable than 'star'
-        const bubbleTypes = [{key:'grund', shape:'circle'}, {key:'erweitert', shape:'rect'}];
+        // Define shapes for different categories (circle for grund, rect for erweitert)
+        const bubbleTypes = [{key:'grund', shape:'circle', labelCategory: 'Grundanforderungen'}, {key:'erweitert', shape:'rect', labelCategory: 'Erweiterte Anforderungen'}];
 
         bubbleTypes.forEach((t, iType) => {
             Object.keys(statusInfo).forEach((status, iStatus) => {
                 const filteredGoals = goals.filter(g=>g.category===t.key && g.status===status);
                 const sumWeight = filteredGoals.reduce((sum,g)=>sum+g.weight,0);
-                if (sumWeight > 0) {
+                const goalCount = filteredGoals.length; // Get the actual count of goals
+                if (goalCount > 0) { // Only add a bubble if there are goals
                     bubbleDatasets.push({
-                        label: `${t.key==='grund'?'Grund':'Erweitert'}: ${statusInfo[status].label}`,
+                        label: `${t.labelCategory}: ${statusInfo[status].label}`,
                         data:[{ 
-                            x: iType + Math.random() * 0.4 - 0.2, 
-                            y: iStatus + Math.random() * 0.4 - 0.2,
-                            r: Math.sqrt(sumWeight) * 8 + 4
+                            x: iType + Math.random() * 0.4 - 0.2, // Randomize X slightly to prevent overlap
+                            y: iStatus + Math.random() * 0.4 - 0.2, // Randomize Y slightly
+                            r: Math.sqrt(sumWeight) * 8 + 4, // Radius based on weighted sum
+                            goalCount: goalCount // Store the count for tooltip
                         }],
                         backgroundColor: statusInfo[status].chartBubble,
-                        // Set the point style based on the category
-                        pointStyle: t.shape 
+                        pointStyle: t.shape // Set the point style (circle/rect)
                     });
                 }
             });
@@ -476,7 +573,8 @@ document.addEventListener('DOMContentLoaded', () => {
             type: 'bubble',
             data: { datasets: bubbleDatasets },
             options: {
-                responsive: true, maintainAspectRatio: false,
+                responsive: true, 
+                maintainAspectRatio: false,
                 scales: { 
                     x: { display: false, min: -0.5, max: 2.5 }, 
                     y: { display: false, min: -0.5, max: 3.5 } 
@@ -484,41 +582,132 @@ document.addEventListener('DOMContentLoaded', () => {
                 plugins: { 
                     legend: { 
                         position: 'bottom',
-                        // Make the legend use the point styles (circle/rect)
                         labels: {
-                            usePointStyle: true,
+                            usePointStyle: true, // Make the legend use the point styles (circle/rect)
                         }
-                    } 
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                // Access the custom 'goalCount' from the raw data
+                                const dataPoint = context.raw;
+                                return `${context.dataset.label}: ${dataPoint.goalCount} Lernziele`;
+                            }
+                        }
+                    }
                 }
             }
         };
-        if (charts.bubbleChart) charts.bubbleChart.destroy();
         charts.bubbleChart = new Chart(ctxB, configB);
-        // --- MODIFICATION END ---
     }
     
+    // Renders the overview page displaying a summary of each subject's progress
+    function renderOverviewPage() {
+        mainContent.innerHTML = `
+            <div class="p-8 bg-white rounded-xl shadow-sm">
+                <h2 class="text-3xl font-bold mb-6 text-slate-800">Übersicht Lernstand</h2>
+                <div id="subjectOverviewGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Subject overview cards will be injected here -->
+                </div>
+            </div>
+        `;
+
+        const overviewGrid = document.getElementById('subjectOverviewGrid');
+        if (!overviewGrid) return;
+
+        if (Object.keys(appState.data).length === 0) {
+            overviewGrid.innerHTML = `<p class="text-slate-500 text-center col-span-full py-10">Fügen Sie Fächer hinzu, um eine Übersicht zu erhalten.</p>`;
+            return;
+        }
+
+        Object.keys(appState.data).forEach(subjectName => {
+            const goals = appState.data[subjectName];
+
+            // Calculate weighted percentages for Grundanforderungen
+            const grundGoals = goals.filter(g => g.category === 'grund');
+            const totalWeightedGrund = grundGoals.reduce((sum, g) => sum + g.weight, 0);
+            const achievedWeightedGrund = grundGoals.filter(g => g.status === 'erreicht').reduce((sum, g) => sum + g.weight, 0);
+            const percentageGrund = totalWeightedGrund > 0 ? ((achievedWeightedGrund / totalWeightedGrund) * 100).toFixed(0) : 0;
+
+            // Calculate weighted percentages for Erweiterte Anforderungen
+            const erweitertGoals = goals.filter(g => g.category === 'erweitert');
+            const totalWeightedErweitert = erweitertGoals.reduce((sum, g) => sum + g.weight, 0);
+            const achievedWeightedErweitert = erweitertGoals.filter(g => g.status === 'erreicht').reduce((sum, g) => sum + g.weight, 0);
+            const percentageErweitert = totalWeightedErweitert > 0 ? ((achievedWeightedErweitert / totalWeightedErweitert) * 100).toFixed(0) : 0;
+            
+            // Determine progress bar colors
+            const progressColorGrund = percentageGrund >= 75 ? 'bg-emerald-500' : (percentageGrund >= 40 ? 'bg-amber-500' : 'bg-red-500');
+            const progressColorErweitert = percentageErweitert >= 75 ? 'bg-emerald-500' : (percentageErweitert >= 40 ? 'bg-amber-500' : 'bg-red-500');
+
+            const card = document.createElement('div');
+            card.className = `bg-slate-50 p-6 rounded-lg shadow-sm border border-slate-200 cursor-pointer hover:shadow-md transition-shadow`;
+            card.onclick = () => {
+                appState.activeSubject = subjectName; // Switch to this subject's detail view
+                saveState();
+                render();
+            };
+            card.innerHTML = `
+                <h3 class="text-xl font-bold text-slate-800 mb-3">${subjectName}</h3>
+                
+                <div class="mb-3">
+                    <p class="text-sm text-slate-600 mb-1">Grundanforderungen:</p>
+                    <div class="flex items-center gap-3">
+                        <div class="w-full bg-slate-200 rounded-full h-2.5">
+                            <div class="h-2.5 rounded-full ${progressColorGrund}" style="width: ${percentageGrund}%"></div>
+                        </div>
+                        <span class="text-slate-600 font-semibold text-sm">${percentageGrund}%</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-1">${achievedWeightedGrund.toFixed(1)} von ${totalWeightedGrund.toFixed(1)} gewichteten Punkten</p>
+                </div>
+
+                <div>
+                    <p class="text-sm text-slate-600 mb-1">Erweiterte Anforderungen:</p>
+                    <div class="flex items-center gap-3">
+                        <div class="w-full bg-slate-200 rounded-full h-2.5">
+                            <div class="h-2.5 rounded-full ${progressColorErweitert}" style="width: ${percentageErweitert}%"></div>
+                        </div>
+                        <span class="text-slate-600 font-semibold text-sm">${percentageErweitert}%</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-1">${achievedWeightedErweitert.toFixed(1)} von ${totalWeightedErweitert.toFixed(1)} gewichteten Punkten</p>
+                </div>
+            `;
+            overviewGrid.appendChild(card);
+        });
+    }
+
     // --- MASTER RENDER & EVENT LISTENERS ---
+    // Main render function that orchestrates UI updates
     function render() {
         renderSidebar();
         renderMainContent();
     }
 
+    // Event listener for showing the add subject form
     showAddSubjectBtn.addEventListener('click', () => {
         addSubjectForm.classList.remove('hidden');
         newSubjectNameInput.focus();
     });
+    // Event listener for canceling add subject
     cancelAddSubjectBtn.addEventListener('click', () => {
         addSubjectForm.classList.add('hidden');
         newSubjectNameInput.value = '';
     });
+    // Event listener for adding a subject
     addSubjectBtn.addEventListener('click', addSubject);
+    // Event listener for adding a subject with Enter key
     newSubjectNameInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') addSubject();
     });
+    // Event listener for the "Übersicht" button
+    showOverviewBtn.addEventListener('click', () => {
+        appState.activeSubject = null; // Set active subject to null to show overview
+        saveState();
+        render();
+    });
 
     // --- INITIALIZATION ---
-    loadState();
-    render();
+    loadState(); // Load saved data
+    render(); // Initial render of the UI
 });
 </script>
 
