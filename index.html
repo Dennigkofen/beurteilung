@@ -75,7 +75,7 @@
             <div class="mb-4">
                 <button id="showMasterGoalsBtn" class="w-full flex items-center gap-2 px-3 py-2 rounded-md transition-colors text-slate-700 hover:bg-slate-100">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg>
-                    <span class="font-semibold">Master-Lernziele</span>
+                    <span class="font-semibold">Master-Lernziele & Fächer</span>
                 </button>
             </div>
 
@@ -109,6 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let appState = {
         students: {}, // studentId: { id, name, subjects: { 'FachName': [goals_with_revisions_and_masterGoalId] } }
         masterGoals: [], // [{ id, subjectName, text, category, weight }]
+        masterSubjects: [], // Array of unique subject names (strings)
         activeStudent: null, // ID of the currently selected student
         activeSubject: null, // null for overview, subject name for subject view (for active student)
         viewMode: 'studentOverview' // 'studentOverview', 'studentSubject', 'masterGoals'
@@ -182,46 +183,64 @@ document.addEventListener('DOMContentLoaded', () => {
         const savedState = localStorage.getItem(STORAGE_KEY);
         if (savedState) {
             appState = JSON.parse(savedState);
-            // Ensure masterGoals are always present and correctly structured
-            if (!appState.masterGoals || !Array.isArray(appState.masterGoals) || appState.masterGoals.length === 0) {
-                 initializeMasterGoals();
-            }
-            // Add any missing master goals to existing students (e.g., if master was updated in another session)
-            Object.values(appState.students).forEach(student => {
-                appState.masterGoals.forEach(mGoal => {
-                    const subjectGoals = student.subjects[mGoal.subjectName] || [];
-                    const existsInStudent = subjectGoals.some(sGoal => sGoal.masterGoalId === mGoal.id);
-                    if (!existsInStudent) {
-                        if (!student.subjects[mGoal.subjectName]) {
-                            student.subjects[mGoal.subjectName] = [];
+        }
+
+        // Ensure masterGoals and masterSubjects are initialized
+        if (!appState.masterGoals || appState.masterGoals.length === 0) {
+            initializeMasterGoals();
+        }
+        if (!appState.masterSubjects || appState.masterSubjects.length === 0) {
+             // Populate masterSubjects from masterGoals if they don't exist
+             appState.masterSubjects = [...new Set(appState.masterGoals.map(mg => mg.subjectName))];
+             appState.masterSubjects.sort(); // Keep sorted
+        }
+
+        // --- Synchronize student data with masterGoals on load ---
+        Object.values(appState.students).forEach(student => {
+            const synchronizedSubjects = {};
+
+            // Collect all current master goal IDs for quick lookup
+            const currentMasterGoalIds = new Set(appState.masterGoals.map(mg => mg.id));
+            
+            // 1. Process existing student goals: update or keep if master goal still exists
+            // This also ensures subjects are created if they exist in masterGoals but not in student.subjects
+            Object.keys(student.subjects).forEach(subjectName => {
+                student.subjects[subjectName].forEach(sGoal => {
+                    if (currentMasterGoalIds.has(sGoal.masterGoalId)) {
+                        const mGoal = appState.masterGoals.find(mg => mg.id === sGoal.masterGoalId);
+                        if (mGoal) {
+                            if (!synchronizedSubjects[mGoal.subjectName]) {
+                                synchronizedSubjects[mGoal.subjectName] = [];
+                            }
+                            // Update master-controlled fields, keep revisions
+                            const updatedGoal = { ...sGoal,
+                                text: mGoal.text,
+                                category: mGoal.category,
+                                weight: mGoal.weight,
+                                subjectName: mGoal.subjectName // Ensure subjectName is consistent
+                            };
+                            synchronizedSubjects[mGoal.subjectName].push(updatedGoal);
                         }
-                        student.subjects[mGoal.subjectName].push(cloneMasterGoalToStudentGoal(mGoal));
                     }
                 });
             });
-        } else {
-            // Initial setup if no saved state
-            initializeMasterGoals(); // Setup master goals first
-            
-            // Add a default student and clone master goals for them
-            const defaultStudentId = 'student_' + Date.now();
-            appState.students[defaultStudentId] = {
-                id: defaultStudentId,
-                name: 'Max Mustermann',
-                subjects: {} // Subjects will be populated from masterGoals below
-            };
-            appState.masterGoals.forEach(mGoal => {
-                if (!appState.students[defaultStudentId].subjects[mGoal.subjectName]) {
-                    appState.students[defaultStudentId].subjects[mGoal.subjectName] = [];
-                }
-                appState.students[defaultStudentId].subjects[mGoal.subjectName].push(cloneMasterGoalToStudentGoal(mGoal));
-            });
-            appState.activeStudent = defaultStudentId;
-            appState.activeSubject = null;
-            appState.viewMode = 'studentOverview';
-        }
 
-        // Ensure active student and subject are valid after load (e.g., if a student was deleted)
+            // 2. Add new master goals to student that are not yet present
+            appState.masterGoals.forEach(mGoal => {
+                const subjectGoals = synchronizedSubjects[mGoal.subjectName] || [];
+                const existsInStudent = subjectGoals.some(sGoal => sGoal.masterGoalId === mGoal.id);
+                if (!existsInStudent) {
+                    if (!synchronizedSubjects[mGoal.subjectName]) {
+                        synchronizedSubjects[mGoal.subjectName] = [];
+                    }
+                    synchronizedSubjects[mGoal.subjectName].push(cloneMasterGoalToStudentGoal(mGoal));
+                }
+            });
+            student.subjects = synchronizedSubjects;
+        });
+        // --- End synchronization ---
+
+        // Ensure active student and subject are valid after load
         if (appState.activeStudent && !appState.students[appState.activeStudent]) {
             appState.activeStudent = Object.keys(appState.students)[0] || null;
             appState.activeSubject = null;
@@ -235,23 +254,25 @@ document.addEventListener('DOMContentLoaded', () => {
             appState.activeStudent = Object.keys(appState.students)[0];
             appState.activeSubject = null;
             appState.viewMode = 'studentOverview';
+        } else if (!appState.activeStudent && Object.keys(appState.students).length === 0) {
+             // No students exist at all, default to masterGoals page
+             appState.viewMode = 'masterGoals';
         }
     }
 
-    // Initializes master subjects with sample data
+    // Initializes master goals and master subjects with sample data
     function initializeMasterGoals() {
         appState.masterGoals = [
-            { id: 'mg_' + Date.now() + '_math_1', subjectName: 'Mathematik', text: 'Bruchrechnung verstehen', category: 'grund', weight: 3 },
-            { id: 'mg_' + Date.now() + '_math_2', subjectName: 'Mathematik', text: 'Gleichungen lösen', category: 'grund', weight: 4 },
-            { id: 'mg_' + Date.now() + '_math_3', subjectName: 'Mathematik', text: 'Komplexe Textaufgaben', category: 'erweitert', weight: 5 },
-            { id: 'mg_' + Date.now() + '_math_4', subjectName: 'Mathematik', text: 'Logarithmen', category: 'erweitert', weight: 3 },
-            { id: 'mg_' + Date.now() + '_math_5', subjectName: 'Mathematik', text: 'Geometrie Grundlagen', category: 'grund', weight: 2 },
-            { id: 'mg_' + Date.now() + '_deutsch_1', subjectName: 'Deutsch', text: 'Rechtschreibung beherrschen', category: 'grund', weight: 4 },
-            { id: 'mg_' + Date.now() + '_deutsch_2', subjectName: 'Deutsch', text: 'Grammatik anwenden', category: 'grund', weight: 3 },
-            { id: 'mg_' + Date.now() + '_deutsch_3', subjectName: 'Deutsch', text: 'Aufsatz strukturieren', category: 'erweitert', weight: 5 },
-            { id: 'mg_' + Date.now() + '_englisch_1', subjectName: 'Englisch', text: 'Vokabeln A1 beherrschen', category: 'grund', weight: 3 },
-            { id: 'mg_' + Date.now() + '_englisch_2', subjectName: 'Englisch', text: 'Konversation führen', category: 'erweitert', weight: 4 }
+            { id: 'mg_initial_math_1', subjectName: 'Mathematik', text: 'Bruchrechnung verstehen', category: 'grund', weight: 3 },
+            { id: 'mg_initial_math_2', subjectName: 'Mathematik', text: 'Gleichungen lösen', category: 'grund', weight: 4 },
+            { id: 'mg_initial_math_3', subjectName: 'Mathematik', text: 'Komplexe Textaufgaben', category: 'erweitert', weight: 5 },
+            { id: 'mg_initial_deutsch_1', subjectName: 'Deutsch', text: 'Rechtschreibung beherrschen', category: 'grund', weight: 4 },
+            { id: 'mg_initial_deutsch_2', subjectName: 'Deutsch', text: 'Grammatik anwenden', category: 'grund', weight: 3 },
+            { id: 'mg_initial_englisch_1', subjectName: 'Englisch', text: 'Vokabeln A1 beherrschen', category: 'grund', weight: 3 }
         ];
+        // Populate masterSubjects from these initial goals
+        appState.masterSubjects = [...new Set(appState.masterGoals.map(mg => mg.subjectName))];
+        appState.masterSubjects.sort();
     }
 
     // Clones a master goal into a student-specific goal object
@@ -262,6 +283,7 @@ document.addEventListener('DOMContentLoaded', () => {
             text: masterGoal.text,
             category: masterGoal.category,
             weight: masterGoal.weight,
+            subjectName: masterGoal.subjectName, // Keep subjectName for easier filtering
             revisions: [] // Always start with empty revisions for a new student goal
         };
     }
@@ -317,6 +339,37 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Adds a new master subject
+    function addMasterSubject(subjectName) {
+        if (!appState.masterSubjects.includes(subjectName)) {
+            appState.masterSubjects.push(subjectName);
+            appState.masterSubjects.sort();
+            saveState();
+            render();
+        }
+    }
+
+    // Removes a master subject and cascades changes
+    function removeMasterSubject(subjectName) {
+        const message = `Sind Sie sicher, dass Sie das Fach "${subjectName}" aus der Masterliste löschen möchten? Dies wird ALLE zugehörigen Master-Lernziele und ihre Instanzen in ALLEN Schülerportfolios entfernen!`;
+        showConfirmationModal(message, () => {
+            // Remove from masterSubjects list
+            appState.masterSubjects = appState.masterSubjects.filter(s => s !== subjectName);
+
+            // Remove associated masterGoals
+            appState.masterGoals = appState.masterGoals.filter(mg => mg.subjectName !== subjectName);
+
+            // Remove associated goals from all students
+            Object.values(appState.students).forEach(student => {
+                if (student.subjects[subjectName]) {
+                    delete student.subjects[subjectName]; // Remove the entire subject entry for this student
+                }
+            });
+            saveState();
+            render();
+        });
+    }
+
     // Adds a new master goal and propagates it to all students
     function addMasterGoal(newMasterGoal) {
         // Generate a unique ID for the new master goal
@@ -346,41 +399,32 @@ document.addEventListener('DOMContentLoaded', () => {
             Object.values(appState.students).forEach(student => {
                 const studentGoal = Object.values(student.subjects).flat().find(sg => sg.masterGoalId === masterGoalId);
                 if (studentGoal) {
-                    // Update only master-controlled fields (text, category, weight)
+                    // Update only master-controlled fields (text, category, weight, subjectName)
                     studentGoal.text = masterGoal.text;
                     studentGoal.category = masterGoal.category;
                     studentGoal.weight = masterGoal.weight;
-                    // Note: revisions (assessments) are NOT touched
-                }
-            });
-            saveState();
-            render();
-        }
-    }
-
-    // Removes a master goal and deletes it from all students
-    function removeMasterGoal(masterGoalId) {
-        const masterGoal = appState.masterGoals.find(mg => mg.id === masterGoalId);
-        if (!masterGoal) return;
-
-        const message = `Sind Sie sicher, dass Sie das Master-Lernziel "${masterGoal.text}" und alle Instanzen in Schülerportfolios löschen möchten?`;
-        showConfirmationModal(message, () => {
-            // Remove from masterGoals
-            appState.masterGoals = appState.masterGoals.filter(mg => mg.id !== masterGoalId);
-
-            // Remove from all students
-            Object.values(appState.students).forEach(student => {
-                for (const subjectName in student.subjects) {
-                    student.subjects[subjectName] = student.subjects[subjectName].filter(sg => sg.masterGoalId !== masterGoalId);
-                    // If a subject becomes empty after deletion, remove it
-                    if (student.subjects[subjectName].length === 0) {
-                        delete student.subjects[subjectName];
+                    // If subjectName changed, re-assign within student's subjects object
+                    if (studentGoal.subjectName !== masterGoal.subjectName) {
+                        const oldSubjectName = studentGoal.subjectName;
+                        studentGoal.subjectName = masterGoal.subjectName; // Update the goal's subjectName
+                        
+                        // Move the goal to the new subject in the student's subjects object
+                        if (!student.subjects[masterGoal.subjectName]) {
+                            student.subjects[masterGoal.subjectName] = [];
+                        }
+                        student.subjects[masterGoal.subjectName].push(studentGoal);
+                        
+                        // Remove from old subject array
+                        student.subjects[oldSubjectName] = student.subjects[oldSubjectName].filter(g => g.id !== studentGoal.id);
+                        if (student.subjects[oldSubjectName].length === 0) {
+                            delete student.subjects[oldSubjectName]; // Clean up empty subject arrays
+                        }
                     }
                 }
             });
             saveState();
             render();
-        });
+        }
     }
 
     // Updates a specific revision (initial or final) of a goal for the active student
@@ -418,19 +462,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Removes a learning goal from the active student's active subject
-    // This function now only applies to student goals, which means they were master goals
-    // We confirm that it removes ONLY the student's instance, not the master
-    // For now, let's allow only master goals to be deleted to avoid inconsistencies.
-    // If a student goal needs to be deleted, it implies the master goal also needs to be gone.
-    // So this function should only be called if the master goal was already removed.
-    // For now, I'll keep the function but prevent direct removal from the student's view,
-    // only allowing update.
-    function removeGoal(goalId) {
-        // This function will not be directly callable from the student's subject list anymore
-        // as goals are managed from the master list.
-        // If a goal needs to be removed for a student, it must be removed from masterGoals.
-        console.warn("Direct removal of student goal is disabled. Please remove from Master-Lernziele instead.");
+    // This function removes a subject (and its goals) *only for the active student*.
+    // It does NOT affect master goals or other students.
+    function removeSubjectFromStudent(subjectName) {
+        if (!appState.activeStudent) return;
+        const student = appState.students[appState.activeStudent];
+        const message = `Sind Sie sicher, dass Sie das Fach "${subjectName}" und alle zugehörigen Lernziele für ${student.name} löschen möchten? (Dies entfernt das Fach nur für diesen Schüler, nicht aus den Master-Lernzielen.)`;
+        showConfirmationModal(message, () => {
+            if (student.subjects[subjectName]) {
+                delete student.subjects[subjectName];
+            }
+            if (appState.activeSubject === subjectName) {
+                appState.activeSubject = null;
+                appState.viewMode = 'studentOverview';
+            }
+            saveState();
+            render();
+        });
     }
     
     // --- MODAL DIALOG for confirmations and updates ---
@@ -600,7 +648,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-600 mb-1">Fach:</label>
-                            <input type="text" id="editMasterGoalSubject" class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500" value="${masterGoal.subjectName}" required>
+                            <select id="editMasterGoalSubject" class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500" required>
+                                <!-- Options populated by JS -->
+                            </select>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-600 mb-1">Kategorie:</label>
@@ -627,11 +677,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const modal = document.getElementById('editMasterGoalModal');
         const form = document.getElementById('editMasterGoalForm');
         const textInput = document.getElementById('editMasterGoalText');
-        const subjectInput = document.getElementById('editMasterGoalSubject');
+        const subjectSelect = document.getElementById('editMasterGoalSubject'); // This is now a select
         const categorySelect = document.getElementById('editMasterGoalCategory');
         const weightInput = document.getElementById('editMasterGoalWeight');
         const weightValueSpan = document.getElementById('editMasterGoalWeightValue');
         const cancelBtn = document.getElementById('cancelEditMasterGoalBtn');
+
+        // Populate subject dropdown for master goal form
+        subjectSelect.innerHTML = '';
+        appState.masterSubjects.forEach(subject => {
+            const option = document.createElement('option');
+            option.value = subject;
+            option.textContent = subject;
+            subjectSelect.appendChild(option);
+        });
+        subjectSelect.value = masterGoal.subjectName; // Set current subject as selected
+
 
         categorySelect.value = masterGoal.category;
         weightInput.oninput = (e) => {
@@ -642,7 +703,7 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             const updatedFields = {
                 text: textInput.value.trim(),
-                subjectName: subjectInput.value.trim(),
+                subjectName: subjectSelect.value, // Get value from select
                 category: categorySelect.value,
                 weight: parseInt(weightInput.value, 10)
             };
@@ -687,8 +748,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // Render subjects for the active student
         subjectNav.innerHTML = '';
         if (appState.activeStudent && appState.students[appState.activeStudent] && appState.viewMode !== 'masterGoals') {
-            const subjects = appState.students[appState.activeStudent].subjects;
-            Object.keys(subjects).forEach(name => {
+            const studentSubjects = appState.students[appState.activeStudent].subjects;
+            // Get unique subject names that the student has goals for
+            const currentStudentSubjectNames = Object.keys(studentSubjects).filter(subjectName => studentSubjects[subjectName].length > 0);
+            currentStudentSubjectNames.sort(); // Sort alphabetically
+
+            currentStudentSubjectNames.forEach(name => {
                 const isActiveSubject = name === appState.activeSubject;
                 const container = document.createElement('div');
                 container.className = 'flex items-center group';
@@ -703,28 +768,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     render();
                 };
 
+                // Option to remove subject from THIS student's view
                 const deleteBtn = document.createElement('button');
                 deleteBtn.className = 'p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-100 rounded-md transition-all opacity-0 group-hover:opacity-100';
-                deleteBtn.title = `Fach "${name}" löschen`;
+                deleteBtn.title = `Fach "${name}" für diesen Schüler entfernen`;
                 deleteBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
                 deleteBtn.onclick = (e) => {
                     e.stopPropagation();
-                    // For subjects within a student, this means removing only the student's association with that subject
-                    // This implies the subject can still exist in the master goals.
-                    // For simplicity now, if user wants to delete a subject here, it removes it entirely for that student.
-                    // If a subject is removed from master, it will be removed for all students.
-                    // If user only wants to hide a subject for a student, this needs more complex logic.
-                    // Let's assume for now removing a subject here means deleting its goals for THIS student.
-                    const message = `Sind Sie sicher, dass Sie das Fach "${name}" und alle zugehörigen Lernziele für ${appState.students[appState.activeStudent].name} löschen möchten? (Dies entfernt das Fach nur für diesen Schüler, nicht aus den Master-Lernzielen.)`;
-                    showConfirmationModal(message, () => {
-                        delete appState.students[appState.activeStudent].subjects[name];
-                        if (appState.activeSubject === name) {
-                            appState.activeSubject = null;
-                            appState.viewMode = 'studentOverview';
-                        }
-                        saveState();
-                        render();
-                    });
+                    removeSubjectFromStudent(name); // Use the new specific function
                 };
 
                 container.appendChild(button);
@@ -734,7 +785,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         // Update button styles based on active view mode
-        if (appState.viewMode === 'studentOverview') {
+        if (appState.viewMode === 'studentOverview' && appState.activeStudent !== null) { // Only highlight if a student is active
             showOverviewBtn.classList.add('bg-indigo-100', 'text-indigo-700', 'font-semibold');
         } else {
             showOverviewBtn.classList.remove('bg-indigo-100', 'text-indigo-700', 'font-semibold');
@@ -786,7 +837,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-slate-600 mb-1">Fach</label>
-                            <input type="text" name="subjectName" required class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500">
+                            <select name="subjectName" required class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500">
+                                <!-- Options populated by JS -->
+                            </select>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-600 mb-1">Kategorie</label>
@@ -803,6 +856,27 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                     <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-2.5 px-4 rounded-lg hover:bg-indigo-700 transition">Master-Lernziel hinzufügen</button>
                 </form>
+            </div>
+
+            <div class="bg-white p-8 rounded-xl shadow-sm mb-8">
+                <h2 class="text-3xl font-bold mb-6 text-slate-800">Fächer verwalten (Master)</h2>
+                <div class="flex justify-start mb-4">
+                    <button id="showAddMasterSubjectBtn" class="px-4 py-2 bg-purple-600 text-white font-bold rounded-lg hover:bg-purple-700 transition">
+                        Neues Master-Fach hinzufügen
+                    </button>
+                </div>
+                <div id="addMasterSubjectForm" class="hidden mt-4 p-3 bg-slate-50 rounded-lg transition-all max-w-sm">
+                    <input type="text" id="newMasterSubjectName" placeholder="Name des Fachs..." class="w-full px-2 py-1.5 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                    <div class="flex gap-2 mt-2">
+                        <button id="addMasterSubjectSubmitBtn" class="flex-1 px-3 py-1.5 bg-purple-600 text-white text-sm rounded-md hover:bg-purple-700 transition-colors">Hinzufügen</button>
+                        <button id="cancelAddMasterSubjectBtn" class="flex-1 px-3 py-1.5 bg-slate-200 text-slate-700 text-sm rounded-md hover:bg-slate-300 transition-colors">Abbrechen</button>
+                    </div>
+                </div>
+
+                <div id="masterSubjectsList" class="space-y-2 mt-4">
+                    <!-- Master subjects will be listed here -->
+                </div>
+                ${appState.masterSubjects.length === 0 ? '<p class="text-slate-500 text-center py-4">Noch keine Fächer erfasst.</p>' : ''}
             </div>
 
             <div class="bg-white p-8 rounded-xl shadow-sm">
@@ -830,9 +904,26 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
 
         const masterGoalForm = document.getElementById('masterGoalForm');
+        const masterGoalSubjectSelect = masterGoalForm.querySelector('select[name="subjectName"]');
         const masterGoalWeightInput = masterGoalForm.querySelector('input[name="weight"]');
         const masterGoalWeightValueSpan = document.getElementById('masterGoalWeightValue');
 
+        // Populate subject dropdown for master goal form
+        masterGoalSubjectSelect.innerHTML = '';
+        appState.masterSubjects.forEach(subject => {
+            const option = document.createElement('option');
+            option.value = subject;
+            option.textContent = subject;
+            masterGoalSubjectSelect.appendChild(option);
+        });
+        if (appState.masterSubjects.length === 0) {
+            masterGoalSubjectSelect.innerHTML = '<option value="" disabled selected>Zuerst Fach hinzufügen</option>';
+            masterGoalSubjectSelect.disabled = true;
+            masterGoalForm.querySelector('button[type="submit"]').disabled = true;
+        } else {
+            masterGoalSubjectSelect.disabled = false;
+            masterGoalForm.querySelector('button[type="submit"]').disabled = false;
+        }
         masterGoalWeightInput.oninput = (e) => {
             masterGoalWeightValueSpan.textContent = e.target.value;
         };
@@ -842,7 +933,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const formData = new FormData(e.target);
             const newMasterGoal = {
                 text: formData.get('text').trim(),
-                subjectName: formData.get('subjectName').trim(),
+                subjectName: formData.get('subjectName'), // Now comes from select
                 category: formData.get('category'),
                 weight: parseInt(formData.get('weight'), 10)
             };
@@ -850,10 +941,64 @@ document.addEventListener('DOMContentLoaded', () => {
                 addMasterGoal(newMasterGoal);
                 e.target.reset(); // Clear form
                 masterGoalWeightValueSpan.textContent = '3'; // Reset weight display
+                masterGoalSubjectSelect.value = ''; // Reset subject select
             }
         });
 
+        // Add/remove master subjects directly
+        const showAddMasterSubjectBtn = document.getElementById('showAddMasterSubjectBtn');
+        const addMasterSubjectForm = document.getElementById('addMasterSubjectForm');
+        const newMasterSubjectNameInput = document.getElementById('newMasterSubjectName');
+        const addMasterSubjectSubmitBtn = document.getElementById('addMasterSubjectSubmitBtn');
+        const cancelAddMasterSubjectBtn = document.getElementById('cancelAddMasterSubjectBtn');
+        const masterSubjectsList = document.getElementById('masterSubjectsList');
+
+        showAddMasterSubjectBtn.addEventListener('click', () => {
+            addMasterSubjectForm.classList.remove('hidden');
+            newMasterSubjectNameInput.focus();
+        });
+        cancelAddMasterSubjectBtn.addEventListener('click', () => {
+            addMasterSubjectForm.classList.add('hidden');
+            newMasterSubjectNameInput.value = '';
+        });
+        addMasterSubjectSubmitBtn.addEventListener('click', () => {
+            const name = newMasterSubjectNameInput.value.trim();
+            if (name && !appState.masterSubjects.includes(name)) {
+                addMasterSubject(name);
+                newMasterSubjectNameInput.value = '';
+                addMasterSubjectForm.classList.add('hidden');
+            }
+        });
+        newMasterSubjectNameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const name = newMasterSubjectNameInput.value.trim();
+                if (name && !appState.masterSubjects.includes(name)) {
+                    addMasterSubject(name);
+                    newMasterSubjectNameInput.value = '';
+                    addMasterSubjectForm.classList.add('hidden');
+                }
+            }
+        });
+
+        // Render list of master subjects
+        masterSubjectsList.innerHTML = '';
+        appState.masterSubjects.forEach(subjectName => {
+            const div = document.createElement('div');
+            div.className = 'flex items-center justify-between p-2 bg-slate-50 rounded-md border border-slate-200';
+            div.innerHTML = `
+                <span>${subjectName}</span>
+                <button data-subject="${subjectName}" class="delete-master-subject-btn text-red-600 hover:text-red-800" title="Fach löschen">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                </button>
+            `;
+            masterSubjectsList.appendChild(div);
+            div.querySelector('.delete-master-subject-btn').addEventListener('click', (e) => {
+                removeMasterSubject(e.currentTarget.dataset.subject);
+            });
+        });
+
         const masterGoalsTableBody = document.getElementById('masterGoalsTableBody');
+        masterGoalsTableBody.innerHTML = ''; // Clear previous content
         appState.masterGoals.forEach(mGoal => {
             const row = document.createElement('tr');
             row.innerHTML = `
@@ -884,7 +1029,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Renders the subject-specific page for the active student
     function renderSubjectPage() {
         if (!appState.activeStudent || !appState.activeSubject) {
-            // Should not happen if renderMainContent handles viewMode correctly
             mainContent.innerHTML = `<p class="text-slate-500 text-center py-4">Ansicht nicht verfügbar.</p>`;
             return;
         }
@@ -1022,7 +1166,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         <button class="update-goal-btn flex-shrink-0 text-slate-400 hover:text-indigo-600 transition-colors" title="Status aktualisieren" data-goal-id="${goal.id}">
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                         </button>
-                        <!-- Removal of goals is now handled via master goals for consistency -->
                     </div>
                 </div>
             `;
@@ -1368,18 +1511,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div id="subjectOverviewGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <!-- Subject overview cards will be injected here -->
                 </div>
-                <div class="flex justify-start mt-6">
-                     <button id="addSubjectToStudentBtn" class="px-4 py-2 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 transition">
-                         Neues Fach für diesen Schüler hinzufügen
-                     </button>
-                </div>
-                <div id="addSubjectToStudentForm" class="hidden mt-4 p-3 bg-slate-50 rounded-lg transition-all max-w-sm">
-                    <input type="text" id="newSubjectNameToStudent" placeholder="Name des Fachs..." class="w-full px-2 py-1.5 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-                    <div class="flex gap-2 mt-2">
-                        <button id="addSubjectToStudentSubmitBtn" class="flex-1 px-3 py-1.5 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700 transition-colors">Hinzufügen</button>
-                        <button id="cancelAddSubjectToStudentBtn" class="flex-1 px-3 py-1.5 bg-slate-200 text-slate-700 text-sm rounded-md hover:bg-slate-300 transition-colors">Abbrechen</button>
-                    </div>
-                </div>
+                <!-- The "add subject to student" button is removed as subjects are managed globally now -->
             </div>
         `;
 
@@ -1441,52 +1573,6 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             overviewGrid.appendChild(card);
         });
-
-        // Event listeners for Add Subject from overview page for a specific student
-        const addSubjectToStudentBtn = document.getElementById('addSubjectToStudentBtn');
-        const addSubjectToStudentForm = document.getElementById('addSubjectToStudentForm');
-        const newSubjectNameToStudent = document.getElementById('newSubjectNameToStudent');
-        const addSubjectToStudentSubmitBtn = document.getElementById('addSubjectToStudentSubmitBtn');
-        const cancelAddSubjectToStudentBtn = document.getElementById('cancelAddSubjectToStudentBtn');
-
-        if (addSubjectToStudentBtn) {
-            addSubjectToStudentBtn.addEventListener('click', () => {
-                addSubjectToStudentForm.classList.remove('hidden');
-                newSubjectNameToStudent.focus();
-            });
-        }
-        if (cancelAddSubjectToStudentBtn) {
-            cancelAddSubjectToStudentBtn.addEventListener('click', () => {
-                addSubjectToStudentForm.classList.add('hidden');
-                newSubjectNameToStudent.value = '';
-            });
-        }
-        if (addSubjectToStudentSubmitBtn) {
-            addSubjectToStudentSubmitBtn.addEventListener('click', () => {
-                const name = newSubjectNameToStudent.value.trim();
-                if (name && appState.activeStudent && !appState.students[appState.activeStudent].subjects[name]) {
-                    appState.students[appState.activeStudent].subjects[name] = []; // Add empty subject for THIS student
-                    saveState();
-                    render();
-                    newSubjectNameToStudent.value = '';
-                    addSubjectToStudentForm.classList.add('hidden');
-                }
-            });
-        }
-        if (newSubjectNameToStudent) {
-            newSubjectNameToStudent.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    const name = newSubjectNameToStudent.value.trim();
-                    if (name && appState.activeStudent && !appState.students[appState.activeStudent].subjects[name]) {
-                        appState.students[appState.activeStudent].subjects[name] = [];
-                        saveState();
-                        render();
-                        newSubjectNameToStudent.value = '';
-                        addSubjectToStudentForm.classList.add('hidden');
-                    }
-                }
-            });
-        }
     }
 
     // --- MASTER RENDER & EVENT LISTENERS ---
