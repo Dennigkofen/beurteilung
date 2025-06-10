@@ -203,7 +203,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const currentMasterGoalIds = new Set(appState.masterGoals.map(mg => mg.id));
             
             // 1. Process existing student goals: update or keep if master goal still exists
-            // This also ensures subjects are created if they exist in masterGoals but not in student.subjects
             Object.keys(student.subjects).forEach(subjectName => {
                 student.subjects[subjectName].forEach(sGoal => {
                     if (currentMasterGoalIds.has(sGoal.masterGoalId)) {
@@ -236,6 +235,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     synchronizedSubjects[mGoal.subjectName].push(cloneMasterGoalToStudentGoal(mGoal));
                 }
             });
+
+            // 3. Remove student goals if their corresponding master goal no longer exists
+            Object.keys(synchronizedSubjects).forEach(subjectName => {
+                synchronizedSubjects[subjectName] = synchronizedSubjects[subjectName].filter(sGoal =>
+                    currentMasterGoalIds.has(sGoal.masterGoalId)
+                );
+                if (synchronizedSubjects[subjectName].length === 0) {
+                    delete synchronizedSubjects[subjectName]; // Remove empty subject entries
+                }
+            });
+
             student.subjects = synchronizedSubjects;
         });
         // --- End synchronization ---
@@ -425,6 +435,31 @@ document.addEventListener('DOMContentLoaded', () => {
             saveState();
             render();
         }
+    }
+
+    // Removes a specific master goal and cascades its removal from all students
+    function removeMasterGoal(masterGoalId) {
+        const masterGoal = appState.masterGoals.find(mg => mg.id === masterGoalId);
+        if (!masterGoal) return;
+
+        const message = `Sind Sie sicher, dass Sie das Master-Lernziel "${masterGoal.text}" dauerhaft löschen möchten? Dies wird es aus allen Schülerportfolios entfernen!`;
+        showConfirmationModal(message, () => {
+            // Remove from masterGoals array
+            appState.masterGoals = appState.masterGoals.filter(mg => mg.id !== masterGoalId);
+
+            // Remove from all students' subjects
+            Object.values(appState.students).forEach(student => {
+                Object.keys(student.subjects).forEach(subjectName => {
+                    student.subjects[subjectName] = student.subjects[subjectName].filter(sg => sg.masterGoalId !== masterGoalId);
+                    if (student.subjects[subjectName].length === 0) {
+                        delete student.subjects[subjectName]; // Clean up empty subject arrays
+                    }
+                });
+            });
+
+            saveState();
+            render();
+        });
     }
 
     // Updates a specific revision (initial or final) of a goal for the active student
@@ -1022,6 +1057,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 showEditMasterGoalModal(e.currentTarget.dataset.id);
             });
             row.querySelector('.delete-master-goal-btn').addEventListener('click', (e) => {
+                // Call the new removeMasterGoal function with the ID
                 removeMasterGoal(e.currentTarget.dataset.id);
             });
         });
