@@ -1,137 +1,526 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Kompetenzorientiertes Portfolio</title>
-  <!-- Tailwind CSS via CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- React und ReactDOM via CDN -->
-  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
-  <!-- Babel für JSX im Browser -->
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <!-- Lucide-Icons CDN -->
-  <script src="https://unpkg.com/lucide-react@latest/dist/umd/lucide-react.min.js"></script>
-  <!-- Recharts via CDN -->
-  <script src="https://unpkg.com/recharts/umd/Recharts.min.js"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kompetenz-Portfolio</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom scrollbar for goal list */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9; /* slate-100 */
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1; /* slate-300 */
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; /* slate-400 */
+        }
+    </style>
 </head>
-<body class="min-h-screen bg-gray-100">
-  <div id="root"></div>
-  <script type="text/babel">
-    const { useState, useEffect } = React;
-    const {
-      Plus, X, Star, Circle, Settings, BarChart3, BookOpen, Clock, TrendingUp
-    } = window['lucide-react'];
-    const {
-      LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-      Legend, AreaChart, Area
-    } = Recharts;
+<body class="bg-slate-100 text-slate-800">
 
-    const PortfolioDashboard = () => {
-      const [subjects, setSubjects] = useState([]);
-      const [activeTab, setActiveTab] = useState('overview');
-      const [showAddSubject, setShowAddSubject] = useState(false);
-      const [newSubjectName, setNewSubjectName] = useState('');
-      const [showAddGoal, setShowAddGoal] = useState(false);
-      const [currentSubjectForGoal, setCurrentSubjectForGoal] = useState(null);
-      const [newGoal, setNewGoal] = useState({
-        title: '',
-        type: 'basic',
-        weight: 1,
-        status: 'not_achieved',
-        achievedDate: ''
-      });
+    <div class="flex h-screen">
+        <!-- --- Sidebar --- -->
+        <aside class="w-72 bg-white p-4 border-r border-slate-200 flex flex-col shrink-0">
+            <div class="flex items-center gap-3 mb-8">
+                <div class="p-2 bg-indigo-100 rounded-lg">
+                   <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-indigo-600"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path></svg>
+                </div>
+                <h1 class="text-xl font-bold text-slate-900">Kompetenz-Portfolio</h1>
+            </div>
 
-      useEffect(() => {
-        const sampleSubjects = [
-          {
-            id: 1,
-            name: 'Mathematik',
-            learningGoals: [
-              { id: 1, title: 'Bruchrechnung verstehen', type: 'basic', status: 'achieved', weight: 3, achievedDate: '2024-10-15' },
-              { id: 2, title: 'Gleichungen lösen', type: 'basic', status: 'partial', weight: 2, achievedDate: '2024-11-20' },
-              { id: 3, title: 'Geometrische Körper', type: 'basic', status: 'not_achieved', weight: 2, achievedDate: '' },
-              { id: 4, title: 'Komplexe Textaufgaben', type: 'advanced', status: 'achieved', weight: 1, achievedDate: '2024-12-05' },
-              { id: 5, title: 'Wahrscheinlichkeitsrechnung', type: 'advanced', status: 'partial', weight: 2, achievedDate: '2025-01-15' }
-            ]
-          },
-          {
-            id: 2,
-            name: 'Deutsch',
-            learningGoals: [
-              { id: 6, title: 'Rechtschreibung', type: 'basic', status: 'achieved', weight: 4, achievedDate: '2024-09-10' },
-              { id: 7, title: 'Textverständnis', type: 'basic', status: 'achieved', weight: 3, achievedDate: '2024-11-05' },
-              { id: 8, title: 'Aufsatz schreiben', type: 'basic', status: 'partial', weight: 2, achievedDate: '2025-02-20' },
-              { id: 9, title: 'Gedichtanalyse', type: 'advanced', status: 'partial', weight: 1, achievedDate: '2025-03-10' },
-              { id: 10, title: 'Rhetorik', type: 'advanced', status: 'not_achieved', weight: 1, achievedDate: '' }
-            ]
-          }
-        ];
-        setSubjects(sampleSubjects);
-      }, []);
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="font-semibold text-slate-500 text-sm uppercase tracking-wider">Fächer</h2>
+                <button id="showAddSubjectBtn" class="p-1 text-indigo-600 hover:bg-indigo-100 rounded-lg transition-colors" title="Neues Fach hinzufügen">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                </button>
+            </div>
 
-      const generateTimelineFromGoals = (learningGoals) => {
-        const months = ['August', 'September', 'Oktober', 'November', 'Dezember', 'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni'];
-        const timelineData = months.map(month => ({ month, basicAchieved: 0, basicPartial: 0, basicNotAchieved: 0, advancedAchieved: 0, advancedPartial: 0, advancedNotAchieved: 0 }));
-        const basicGoals = learningGoals.filter(g => g.type === 'basic');
-        const advancedGoals = learningGoals.filter(g => g.type === 'advanced');
-        const basicTotal = basicGoals.length;
-        const advancedTotal = advancedGoals.length;
-        if (basicTotal) {
-          const ach = basicGoals.filter(g => g.status === 'achieved').length;
-          const par = basicGoals.filter(g => g.status === 'partial').length;
-          const not = basicGoals.filter(g => g.status === 'not_achieved').length;
-          timelineData.forEach(m => { m.basicAchieved = Math.round((ach/basicTotal)*100); m.basicPartial = Math.round((par/basicTotal)*100); m.basicNotAchieved = Math.round((not/basicTotal)*100); });
-        }
-        if (advancedTotal) {
-          const ach = advancedGoals.filter(g => g.status === 'achieved').length;
-          const par = advancedGoals.filter(g => g.status === 'partial').length;
-          const not = advancedGoals.filter(g => g.status === 'not_achieved').length;
-          timelineData.forEach(m => { m.advancedAchieved = Math.round((ach/advancedTotal)*100); m.advancedPartial = Math.round((par/advancedTotal)*100); m.advancedNotAchieved = Math.round((not/advancedTotal)*100); });
-        }
-        return timelineData;
-      };
+            <div id="addSubjectForm" class="hidden mb-4 p-3 bg-slate-50 rounded-lg transition-all">
+                <input type="text" id="newSubjectName" placeholder="Name des Fachs..." class="w-full px-2 py-1.5 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                <div class="flex gap-2 mt-2">
+                    <button id="addSubjectBtn" class="flex-1 px-3 py-1.5 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700 transition-colors">Hinzufügen</button>
+                    <button id="cancelAddSubjectBtn" class="flex-1 px-3 py-1.5 bg-slate-200 text-slate-700 text-sm rounded-md hover:bg-slate-300 transition-colors">Abbrechen</button>
+                </div>
+            </div>
 
-      const addSubject = () => { if (newSubjectName.trim()) { setSubjects([...subjects, { id: Date.now(), name: newSubjectName.trim(), learningGoals: [] }]); setNewSubjectName(''); setShowAddSubject(false); }};
-      const removeSubject = id => { setSubjects(subjects.filter(s => s.id!==id)); if (activeTab===`subject-${id}`) setActiveTab('overview'); };
-      const addLearningGoal = id => { setCurrentSubjectForGoal(id); setShowAddGoal(true); setNewGoal({ title:'', type:'basic', weight:1, status:'not_achieved', achievedDate:'' }); };
-      const saveNewGoal = () => {
-        if (newGoal.title.trim() && currentSubjectForGoal) {
-          const goal = {...newGoal, id: Date.now(), weight: parseInt(newGoal.weight)};
-          setSubjects(subjects.map(s => s.id===currentSubjectForGoal ? {...s, learningGoals:[...s.learningGoals, goal]} : s));
-          setShowAddGoal(false); setCurrentSubjectForGoal(null);
-        }
-      };
-      const cancelAddGoal = () => { setShowAddGoal(false); setCurrentSubjectForGoal(null); };
+            <nav id="subject-nav" class="space-y-1 overflow-y-auto"></nav>
+        </aside>
 
-      const updateGoalStatus = (subId, goalId, status, date='') => {
-        setSubjects(subjects.map(s => s.id===subId ? {...s, learningGoals: s.learningGoals.map(g => g.id===goalId ? {...g, status, achievedDate: status==='achieved' ? (date||new Date().toISOString().split('T')[0]) : status==='not_achieved' ? '' : g.achievedDate} : g)} : s));
-      };
-      const removeGoal = (subId, goalId) => { setSubjects(subjects.map(s => s.id===subId ? {...s, learningGoals: s.learningGoals.filter(g=>g.id!==goalId)} : s)); };
-      const getStatusColor = s => s==='achieved'?'#22c55e':s==='partial'?'#f59e0b':s==='not_achieved'?'#ef4444':'#6b7280';
-      const getStatusText = s => s==='achieved'?'Erreicht':s==='partial'?'Teilweise erreicht':s==='not_achieved'?'Noch nicht erreicht':'Unbewertet';
-      const getBubbleData = subject => {
-        const data = {};
-        subject.learningGoals.forEach(g=>{ const key=`${g.type}-${g.status}`; if(!data[key]) data[key]={type:g.type,status:g.status,count:0,totalWeight:0}; data[key].count++; data[key].totalWeight+=g.weight; });
-        return Object.values(data);
-      };
+        <!-- --- Main Content --- -->
+        <main id="main-content" class="flex-1 p-4 md:p-8 overflow-y-auto">
+            <!-- Content will be rendered here by JavaScript -->
+        </main>
+    </div>
 
-      const SubjectTimelineVisualization = ({subject}) => {
-        const data = generateTimelineFromGoals(subject.learningGoals);
-        if (!data.length) return (<div className="bg-white p-6 rounded-lg border shadow-sm"><h3>Entwicklung im Schuljahr - {subject.name}</h3><p>Keine Timeline-Daten verfügbar.</p></div>);
-        return (<div className="space-y-6">[...]</div>); // Verkürzt für Lesbarkeit
-      };
-      const BubbleVisualization = ({subject}) => { const bd=getBubbleData(subject); const maxW=Math.max(...bd.map(b=>b.totalWeight),1); return (<div>...</div>); };
-      const SubjectManagement = ({subject}) => (<div className="space-y-6"><BubbleVisualization subject={subject}/><SubjectTimelineVisualization subject={subject}/></div>);
-      const currentSubject = subjects.find(s => activeTab===`subject-${s.id}`);
+<script>
+document.addEventListener('DOMContentLoaded', () => {
 
-      return (
-        <div className="min-h-screen bg-gray-100">...</div>
-      );
+    // --- STATE MANAGEMENT ---
+    const STORAGE_KEY = 'kompetenzPortfolioApp';
+    let appState = {
+        data: {},
+        activeSubject: null
     };
 
-    ReactDOM.createRoot(document.getElementById('root')).render(<PortfolioDashboard />);
-  </script>
+    const statusInfo = {
+        erreicht: { label: 'Erreicht', color: 'bg-emerald-500', chartBg: 'rgba(52, 211, 153, 0.4)', chartBorder: 'rgba(16, 185, 129, 1)', chartBubble: 'rgba(52, 211, 153, 0.7)' },
+        teilweise: { label: 'Teilweise', color: 'bg-amber-500', chartBg: 'rgba(251, 191, 36, 0.4)', chartBorder: 'rgba(245, 158, 11, 1)', chartBubble: 'rgba(251, 191, 36, 0.7)' },
+        nicht: { label: 'Nicht erreicht', color: 'bg-red-500', chartBg: 'rgba(248, 113, 113, 0.4)', chartBorder: 'rgba(239, 68, 68, 1)', chartBubble: 'rgba(248, 113, 113, 0.7)' }
+    };
+
+    let charts = {
+        timelineGrund: null,
+        timelineErweitert: null,
+        bubbleChart: null,
+    };
+
+    // --- DOM SELECTORS ---
+    const mainContent = document.getElementById('main-content');
+    const subjectNav = document.getElementById('subject-nav');
+    const showAddSubjectBtn = document.getElementById('showAddSubjectBtn');
+    const addSubjectForm = document.getElementById('addSubjectForm');
+    const newSubjectNameInput = document.getElementById('newSubjectName');
+    const addSubjectBtn = document.getElementById('addSubjectBtn');
+    const cancelAddSubjectBtn = document.getElementById('cancelAddSubjectBtn');
+
+    // --- DATA & STATE FUNCTIONS ---
+    function loadState() {
+        const savedState = localStorage.getItem(STORAGE_KEY);
+        if (savedState) {
+            appState = JSON.parse(savedState);
+        } else {
+            // Default sample data
+            appState.data = {
+                'Mathematik': [
+                    { id: 1622548800000, text: 'Bruchrechnung verstehen', category: 'grund', weight: 3, status: 'erreicht', date: '2025-05-15' },
+                    { id: 1625140800001, text: 'Gleichungen lösen', category: 'grund', weight: 4, status: 'teilweise', date: '2025-06-20' },
+                    { id: 1627732800002, text: 'Komplexe Textaufgaben', category: 'erweitert', weight: 5, status: 'nicht', date: '2025-07-05' }
+                ],
+                'Deutsch': [
+                    { id: 1622548800003, text: 'Rechtschreibung', category: 'grund', weight: 4, status: 'erreicht', date: '2025-04-10' },
+                ],
+            };
+            appState.activeSubject = 'Mathematik';
+        }
+        if (!appState.activeSubject && Object.keys(appState.data).length > 0) {
+            appState.activeSubject = Object.keys(appState.data)[0];
+        }
+    }
+
+    function saveState() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+    }
+
+    function addSubject() {
+        const name = newSubjectNameInput.value.trim();
+        if (name && !appState.data[name]) {
+            appState.data[name] = [];
+            appState.activeSubject = name;
+            saveState();
+            render();
+            newSubjectNameInput.value = '';
+            addSubjectForm.classList.add('hidden');
+        }
+    }
+    
+    // --- MODAL DIALOG for confirmations ---
+    function showConfirmationModal(message, onConfirm) {
+        // Remove existing modal first to prevent duplicates
+        const existingModal = document.getElementById('confirmationModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+
+        const modalHTML = `
+            <div id="confirmationModal" class="fixed inset-0 bg-slate-900 bg-opacity-50 flex items-center justify-center z-50">
+                <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm">
+                    <p class="text-slate-800 mb-4">${message}</p>
+                    <div class="flex justify-end gap-3">
+                        <button id="modalCancelBtn" class="px-4 py-2 bg-slate-200 text-slate-800 rounded-md hover:bg-slate-300 transition">Abbrechen</button>
+                        <button id="modalConfirmBtn" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition">Löschen</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+        const modal = document.getElementById('confirmationModal');
+        const confirmBtn = document.getElementById('modalConfirmBtn');
+        const cancelBtn = document.getElementById('modalCancelBtn');
+
+        confirmBtn.onclick = () => {
+            onConfirm();
+            modal.remove();
+        };
+        cancelBtn.onclick = () => {
+            modal.remove();
+        };
+    }
+
+
+    function removeSubject(subjectName) {
+        const message = `Sind Sie sicher, dass Sie das Fach "${subjectName}" und alle zugehörigen Lernziele löschen möchten?`;
+        showConfirmationModal(message, () => {
+            delete appState.data[subjectName];
+            if (appState.activeSubject === subjectName) {
+                appState.activeSubject = Object.keys(appState.data)[0] || null;
+            }
+            saveState();
+            render();
+        });
+    }
+
+    function addGoal(goal) {
+        if (!appState.activeSubject) return;
+        appState.data[appState.activeSubject].push({ ...goal, id: Date.now() });
+        saveState();
+        render();
+    }
+
+    function removeGoal(goalId) {
+        if (!appState.activeSubject) return;
+        const goals = appState.data[appState.activeSubject];
+        appState.data[appState.activeSubject] = goals.filter(g => g.id !== goalId);
+        saveState();
+        render();
+    }
+    
+    // --- RENDERING FUNCTIONS ---
+
+    function renderSidebar() {
+        subjectNav.innerHTML = '';
+        Object.keys(appState.data).forEach(name => {
+            const isActive = name === appState.activeSubject;
+            const container = document.createElement('div');
+            container.className = 'flex items-center group';
+
+            const button = document.createElement('button');
+            button.className = `flex-1 text-left px-3 py-2 rounded-md transition-colors text-slate-700 ${isActive ? 'bg-indigo-100 text-indigo-700 font-semibold' : 'hover:bg-slate-100'}`;
+            button.textContent = name;
+            button.onclick = () => {
+                appState.activeSubject = name;
+                saveState();
+                render();
+            };
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-100 rounded-md transition-all opacity-0 group-hover:opacity-100';
+            deleteBtn.title = `Fach "${name}" löschen`;
+            deleteBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
+            deleteBtn.onclick = (e) => {
+                e.stopPropagation();
+                removeSubject(name);
+            };
+
+            container.appendChild(button);
+            container.appendChild(deleteBtn);
+            subjectNav.appendChild(container);
+        });
+    }
+
+    function renderMainContent() {
+        if (!appState.activeSubject) {
+            mainContent.innerHTML = `
+                <div class="text-center p-10 bg-white rounded-xl shadow-sm">
+                    <h2 class="text-2xl font-bold text-slate-800">Willkommen!</h2>
+                    <p class="text-slate-500 mt-2">Wählen Sie ein Fach aus oder fügen Sie ein neues hinzu, um zu beginnen.</p>
+                </div>`;
+            return;
+        }
+
+        mainContent.innerHTML = `
+            <div class="grid grid-cols-1 xl:grid-cols-5 gap-8">
+                <!-- Left Column (Form & List) -->
+                <div class="xl:col-span-2 space-y-8">
+                    <div class="bg-white p-6 rounded-xl shadow-sm">
+                        <h2 class="text-2xl font-bold mb-4 text-slate-800">Neues Lernziel</h2>
+                        <form id="goalForm" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Text</label>
+                                <input type="text" name="text" required class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-600 mb-1">Kategorie</label>
+                                    <select name="category" class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                                        <option value="grund">Grundanforderung</option>
+                                        <option value="erweitert">Erweiterte Anforderung</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-600 mb-1">Beurteilung</label>
+                                    <select name="status" class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                                        <option value="erreicht">Erreicht</option>
+                                        <option value="teilweise">Teilweise</option>
+                                        <option value="nicht">Nicht erreicht</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Gewichtung (1-5)</label>
+                                <input type="range" name="weight" min="1" max="5" value="3" class="w-full">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Datum</label>
+                                <input type="date" name="date" required class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                            </div>
+                            <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-2.5 px-4 rounded-lg hover:bg-indigo-700 transition">Hinzufügen</button>
+                        </form>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm">
+                        <h2 class="text-2xl font-bold mb-4 text-slate-800">Lernziele-Liste</h2>
+                        <div id="goalList" class="space-y-3 max-h-[45vh] overflow-y-auto pr-2 custom-scrollbar">
+                            <!-- Goal items will be injected here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column (Charts) -->
+                <div class="xl:col-span-3 space-y-8">
+                    <div class="bg-white p-6 rounded-xl shadow-sm">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div>
+                                <h3 class="text-xl font-bold mb-4 text-center text-slate-800">Entwicklung Grundanforderungen</h3>
+                                <canvas id="timelineGrund"></canvas>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold mb-4 text-center text-slate-800">Entwicklung Erweiterte Anforderungen</h3>
+                                <canvas id="timelineErweitert"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm">
+                        <h3 class="text-xl font-bold mb-4 text-center text-slate-800">Bubble-Übersicht</h3>
+                        <div class="h-80 mx-auto">
+                           <canvas id="bubbleChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        const goalForm = document.getElementById('goalForm');
+        goalForm.querySelector('input[name="date"]').valueAsDate = new Date();
+        goalForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const newGoal = {
+                text: formData.get('text'),
+                category: formData.get('category'),
+                status: formData.get('status'),
+                weight: +formData.get('weight'),
+                date: formData.get('date'),
+            };
+            addGoal(newGoal);
+            e.target.reset();
+            goalForm.querySelector('input[name="date"]').valueAsDate = new Date();
+        });
+
+        renderGoalList();
+        renderCharts();
+    }
+    
+    function renderGoalList() {
+        const goalListContainer = document.getElementById('goalList');
+        if (!goalListContainer) return;
+        const goals = appState.data[appState.activeSubject] || [];
+
+        goalListContainer.innerHTML = '';
+        if (goals.length === 0) {
+            goalListContainer.innerHTML = `<p class="text-slate-500 text-center py-4">Noch keine Lernziele erfasst.</p>`;
+            return;
+        }
+
+        goals.slice().sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(goal => {
+            const el = document.createElement('div');
+            el.className = 'p-3.5 border border-slate-200 rounded-lg bg-slate-50';
+            const statusColor = statusInfo[goal.status]?.color || 'bg-slate-400';
+            const categoryText = goal.category === 'grund' ? 'Grundanforderung' : 'Erweiterte Anforderung';
+            const formattedDate = new Date(goal.date).toLocaleDateString('de-DE');
+
+            el.innerHTML = `
+                <div class="flex justify-between items-start gap-3">
+                    <div class="flex-1">
+                        <p class="font-semibold text-slate-800">${goal.text}</p>
+                        <div class="flex items-center gap-4 text-sm text-slate-500 mt-2 flex-wrap">
+                            <span class="flex items-center gap-1.5 whitespace-nowrap"><span class="w-3 h-3 rounded-full ${statusColor}"></span>${statusInfo[goal.status]?.label}</span>
+                            <span>${categoryText}</span>
+                            <span>Gewicht: ${goal.weight}</span>
+                            <span>${formattedDate}</span>
+                        </div>
+                    </div>
+                    <button class="delete-goal-btn flex-shrink-0 text-slate-400 hover:text-red-600 transition-colors" title="Löschen">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"></path><line x1="18" y1="9" x2="12" y2="15"></line><line x1="12" y1="9" x2="18" y2="15"></line></svg>
+                    </button>
+                </div>
+            `;
+            el.querySelector('.delete-goal-btn').addEventListener('click', () => removeGoal(goal.id));
+            goalListContainer.appendChild(el);
+        });
+    }
+
+    function renderCharts() {
+        const goals = appState.data[appState.activeSubject] || [];
+        const months = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+
+        // Timeline charts with percentages
+        ['grund', 'erweitert'].forEach(type => {
+            const canvasId = type === 'grund' ? 'timelineGrund' : 'timelineErweitert';
+            const chartInstanceKey = type === 'grund' ? 'timelineGrund' : 'timelineErweitert';
+            const ctx = document.getElementById(canvasId)?.getContext('2d');
+            if (!ctx) return;
+
+            const monthlyWeightedSums = months.map(() => ({ erreicht: 0, teilweise: 0, nicht: 0 }));
+            goals.filter(g => g.category === type).forEach(g => {
+                const monthIndex = new Date(g.date).getMonth();
+                if(monthlyWeightedSums[monthIndex]) { 
+                    monthlyWeightedSums[monthIndex][g.status] += g.weight;
+                }
+            });
+            
+            const monthlyPercentages = monthlyWeightedSums.map(monthData => {
+                const totalWeight = monthData.erreicht + monthData.teilweise + monthData.nicht;
+                if (totalWeight === 0) {
+                    return { erreicht: 0, teilweise: 0, nicht: 0 };
+                }
+                return {
+                    erreicht: (monthData.erreicht / totalWeight) * 100,
+                    teilweise: (monthData.teilweise / totalWeight) * 100,
+                    nicht: (monthData.nicht / totalWeight) * 100
+                };
+            });
+
+            const datasets = Object.keys(statusInfo).map(status => ({
+                label: statusInfo[status].label,
+                data: monthlyPercentages.map(m => m[status]),
+                fill: true,
+                backgroundColor: statusInfo[status].chartBg,
+                borderColor: statusInfo[status].chartBorder,
+                tension: 0.3,
+            }));
+
+            const config = {
+                type: 'line',
+                data: { labels: months, datasets },
+                options: {
+                    responsive: true, maintainAspectRatio: true,
+                    scales: { 
+                        x: { stacked: true }, 
+                        y: { 
+                            stacked: true, 
+                            min: 0, max: 100,
+                            title: { display: true, text: 'Prozentualer Anteil (gewichtet)' },
+                            ticks: { callback: value => value + '%' }
+                        } 
+                    },
+                    plugins: { 
+                        legend: { position: 'bottom' }, 
+                        tooltip: { 
+                            callbacks: { 
+                                label: context => `${context.dataset.label}: ${context.parsed.y.toFixed(2)}%`
+                            } 
+                        } 
+                    },
+                    interaction: { mode: 'index', intersect: false },
+                }
+            };
+            if (charts[chartInstanceKey]) charts[chartInstanceKey].destroy();
+            charts[chartInstanceKey] = new Chart(ctx, config);
+        });
+
+        // --- MODIFICATION START: Bubble chart with 'rect' for extended requirements ---
+        const ctxB = document.getElementById('bubbleChart')?.getContext('2d');
+        if (!ctxB) return;
+        
+        const bubbleDatasets = [];
+        // Use 'rect' (rectangle/square) for extended requirements as it's more reliable than 'star'
+        const bubbleTypes = [{key:'grund', shape:'circle'}, {key:'erweitert', shape:'rect'}];
+
+        bubbleTypes.forEach((t, iType) => {
+            Object.keys(statusInfo).forEach((status, iStatus) => {
+                const filteredGoals = goals.filter(g=>g.category===t.key && g.status===status);
+                const sumWeight = filteredGoals.reduce((sum,g)=>sum+g.weight,0);
+                if (sumWeight > 0) {
+                    bubbleDatasets.push({
+                        label: `${t.key==='grund'?'Grund':'Erweitert'}: ${statusInfo[status].label}`,
+                        data:[{ 
+                            x: iType + Math.random() * 0.4 - 0.2, 
+                            y: iStatus + Math.random() * 0.4 - 0.2,
+                            r: Math.sqrt(sumWeight) * 8 + 4
+                        }],
+                        backgroundColor: statusInfo[status].chartBubble,
+                        // Set the point style based on the category
+                        pointStyle: t.shape 
+                    });
+                }
+            });
+        });
+
+        const configB = {
+            type: 'bubble',
+            data: { datasets: bubbleDatasets },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: { 
+                    x: { display: false, min: -0.5, max: 2.5 }, 
+                    y: { display: false, min: -0.5, max: 3.5 } 
+                },
+                plugins: { 
+                    legend: { 
+                        position: 'bottom',
+                        // Make the legend use the point styles (circle/rect)
+                        labels: {
+                            usePointStyle: true,
+                        }
+                    } 
+                }
+            }
+        };
+        if (charts.bubbleChart) charts.bubbleChart.destroy();
+        charts.bubbleChart = new Chart(ctxB, configB);
+        // --- MODIFICATION END ---
+    }
+    
+    // --- MASTER RENDER & EVENT LISTENERS ---
+    function render() {
+        renderSidebar();
+        renderMainContent();
+    }
+
+    showAddSubjectBtn.addEventListener('click', () => {
+        addSubjectForm.classList.remove('hidden');
+        newSubjectNameInput.focus();
+    });
+    cancelAddSubjectBtn.addEventListener('click', () => {
+        addSubjectForm.classList.add('hidden');
+        newSubjectNameInput.value = '';
+    });
+    addSubjectBtn.addEventListener('click', addSubject);
+    newSubjectNameInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') addSubject();
+    });
+
+    // --- INITIALIZATION ---
+    loadState();
+    render();
+});
+</script>
+
 </body>
 </html>
