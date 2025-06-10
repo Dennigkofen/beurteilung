@@ -95,7 +95,8 @@ document.addEventListener('DOMContentLoaded', () => {
             chartBgOpaque: 'rgba(52, 211, 153, 1.0)', // Chart.js background for 100% opaque bubbles
             chartBgTransparent: 'rgba(52, 211, 153, 0.1)', // Chart.js background for 10% opaque bubbles
             chartBorder: 'rgba(16, 185, 129, 1)', // Chart.js border for line charts
-            pieColor: '#34d399', // Pie chart color
+            pieColorOpaque: '#34d399', // 100% opacity for pie charts
+            pieColorTransparent: 'rgba(52, 211, 153, 0.1)', // 10% opacity for pie charts
             bubbleBorderColor: 'rgba(16, 185, 129, 1)' // Consistent border color for bubbles
         },
         teilweise: {
@@ -105,7 +106,8 @@ document.addEventListener('DOMContentLoaded', () => {
             chartBgOpaque: 'rgba(251, 191, 36, 1.0)',
             chartBgTransparent: 'rgba(251, 191, 36, 0.1)',
             chartBorder: 'rgba(245, 158, 11, 1)',
-            pieColor: '#f59e0b',
+            pieColorOpaque: '#f59e0b',
+            pieColorTransparent: 'rgba(251, 191, 36, 0.1)',
             bubbleBorderColor: 'rgba(245, 158, 11, 1)'
         },
         nicht: {
@@ -115,7 +117,8 @@ document.addEventListener('DOMContentLoaded', () => {
             chartBgOpaque: 'rgba(248, 113, 113, 1.0)',
             chartBgTransparent: 'rgba(248, 113, 113, 0.1)',
             chartBorder: 'rgba(239, 68, 68, 1)',
-            pieColor: '#ef4444',
+            pieColorOpaque: '#ef4444',
+            pieColorTransparent: 'rgba(248, 113, 113, 0.1)',
             bubbleBorderColor: 'rgba(239, 68, 68, 1)'
         }
     };
@@ -125,8 +128,10 @@ document.addEventListener('DOMContentLoaded', () => {
         timelineGrund: null,
         timelineErweitert: null,
         bubbleChart: null,
-        weightedPieChartGrund: null,
-        weightedPieChartErweitert: null,
+        weightedPieChartGrundInitial: null, // New chart key
+        weightedPieChartGrundCorrected: null, // New chart key
+        weightedPieChartErweitertInitial: null, // New chart key
+        weightedPieChartErweitertCorrected: null, // New chart key
     };
 
     // --- DOM SELECTORS ---
@@ -242,52 +247,107 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Displays a modal to update a goal's status
     function showUpdateStatusModal(goalId) {
+        // Remove existing modal first to prevent duplicates
         const existingModal = document.getElementById('updateStatusModal');
         if (existingModal) {
             existingModal.remove();
         }
 
+        const goal = appState.data[appState.activeSubject].find(g => g.id === goalId);
+        if (!goal) return;
+
+        const initialRevision = goal.revisions[0];
+        // If there's only one revision, it means no "nach Korrektur" yet.
+        // If there are more, the last one is considered "nach Korrektur".
+        const finalRevision = goal.revisions.length > 1 ? goal.revisions[goal.revisions.length - 1] : null;
+
         const modalHTML = `
             <div id="updateStatusModal" class="fixed inset-0 bg-slate-900 bg-opacity-50 flex items-center justify-center z-50">
-                <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm">
-                    <h3 class="text-lg font-semibold mb-4 text-slate-800">Status aktualisieren</h3>
-                    <form id="updateStatusForm" class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-slate-600 mb-1">Neuer Beurteilung</label>
-                            <select name="status" class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
-                                <option value="erreicht">Erreicht</option>
-                                <option value="teilweise">Teilweise</option>
-                                <option value="nicht">Nicht erreicht</option>
-                            </select>
+                <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
+                    <h3 class="text-lg font-semibold mb-4 text-slate-800">Lernziel Status aktualisieren</h3>
+
+                    <!-- Section for Initial Evaluation -->
+                    <div class="mb-6 border p-4 rounded-md bg-slate-50">
+                        <h4 class="font-medium text-slate-700 mb-3">Beurteilung vor Korrektur</h4>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Status:</label>
+                                <select id="initialStatusSelect" class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                                    <option value="erreicht">Erreicht</option>
+                                    <option value="teilweise">Teilweise</option>
+                                    <option value="nicht">Nicht erreicht</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Datum:</label>
+                                <input type="date" id="initialDateInput" required class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                            </div>
+                            <button id="updateInitialBtn" class="w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded-md hover:bg-indigo-700 transition">Aktualisieren (Vor Korrektur)</button>
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-slate-600 mb-1">Datum</label>
-                            <input type="date" name="date" required class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                    </div>
+
+                    <!-- Section for Final Evaluation -->
+                    <div class="mb-6 border p-4 rounded-md bg-slate-50">
+                        <h4 class="font-medium text-slate-700 mb-3">Beurteilung nach Korrektur</h4>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Status:</label>
+                                <select id="finalStatusSelect" class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                                    <option value="erreicht">Erreicht</option>
+                                    <option value="teilweise">Teilweise</option>
+                                    <option value="nicht">Nicht erreicht</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Datum:</label>
+                                <input type="date" id="finalDateInput" required class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                            </div>
+                            <button id="updateFinalBtn" class="w-full bg-emerald-600 text-white font-bold py-2 px-4 rounded-md hover:bg-emerald-700 transition">Aktualisieren (Nach Korrektur)</button>
                         </div>
-                        <div class="flex justify-end gap-3 mt-4">
-                            <button type="button" id="modalUpdateCancelBtn" class="px-4 py-2 bg-slate-200 text-slate-800 rounded-md hover:bg-slate-300 transition">Abbrechen</button>
-                            <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition">Speichern</button>
-                        </div>
-                    </form>
+                    </div>
+
+                    <div class="flex justify-end gap-3 mt-4">
+                        <button type="button" id="modalUpdateCancelBtn" class="px-4 py-2 bg-slate-200 text-slate-800 rounded-md hover:bg-slate-300 transition">Schliessen</button>
+                    </div>
                 </div>
             </div>
         `;
         document.body.insertAdjacentHTML('beforeend', modalHTML);
 
         const modal = document.getElementById('updateStatusModal');
-        const form = document.getElementById('updateStatusForm');
-        form.querySelector('input[name="date"]').valueAsDate = new Date(); // Set default date to today
+        const initialStatusSelect = document.getElementById('initialStatusSelect');
+        const initialDateInput = document.getElementById('initialDateInput');
+        const updateInitialBtn = document.getElementById('updateInitialBtn');
 
-        form.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            const newStatus = formData.get('status');
-            const newDate = formData.get('date');
-            updateGoalStatus(goalId, newStatus, newDate);
+        const finalStatusSelect = document.getElementById('finalStatusSelect');
+        const finalDateInput = document.getElementById('finalDateInput');
+        const updateFinalBtn = document.getElementById('updateFinalBtn');
+        const modalUpdateCancelBtn = document.getElementById('modalUpdateCancelBtn');
+
+        // Populate initial fields
+        initialStatusSelect.value = initialRevision.status;
+        initialDateInput.value = initialRevision.date;
+
+        // Populate final fields
+        if (finalRevision) {
+            finalStatusSelect.value = finalRevision.status;
+            finalDateInput.value = finalRevision.date;
+        } else {
+            // If no final revision, set today's date as default for adding one
+            finalDateInput.valueAsDate = new Date();
+        }
+
+        updateInitialBtn.onclick = () => {
+            updateGoalRevision(goalId, initialStatusSelect.value, initialDateInput.value, true); // true for initial
             modal.remove();
-        });
+        };
 
-        document.getElementById('modalUpdateCancelBtn').onclick = () => {
+        updateFinalBtn.onclick = () => {
+            updateGoalRevision(goalId, finalStatusSelect.value, finalDateInput.value, false); // false for final
+            modal.remove();
+        };
+        
+        modalUpdateCancelBtn.onclick = () => {
             modal.remove();
         };
     }
@@ -321,20 +381,30 @@ document.addEventListener('DOMContentLoaded', () => {
         render();
     }
 
-    // Updates the status of an existing goal by adding a new revision
-    function updateGoalStatus(goalId, newStatus, newDate) {
+    // Updates a specific revision (initial or final) of a goal
+    function updateGoalRevision(goalId, newStatus, newDate, isInitialRevision) {
         if (!appState.activeSubject) return;
         const goals = appState.data[appState.activeSubject];
         const goalIndex = goals.findIndex(g => g.id === goalId);
 
         if (goalIndex !== -1) {
-            // Add a new revision to the goal's revisions array
-            appState.data[appState.activeSubject][goalIndex].revisions.push({
-                date: newDate,
-                status: newStatus
-            });
-            // Sort revisions by date to ensure the last one is always the latest
-            appState.data[appState.activeSubject][goalIndex].revisions.sort((a, b) => new Date(a.date) - new Date(b.date));
+            const goal = appState.data[appState.activeSubject][goalIndex];
+
+            if (isInitialRevision) {
+                // Update the very first revision
+                goal.revisions[0] = { date: newDate, status: newStatus };
+            } else {
+                // This is for "Nach Korrektur".
+                // If only one revision exists (initial), add a second one.
+                // Otherwise, update the last revision.
+                if (goal.revisions.length === 1) {
+                    goal.revisions.push({ date: newDate, status: newStatus });
+                } else {
+                    goal.revisions[goal.revisions.length - 1] = { date: newDate, status: newStatus };
+                }
+            }
+            // Always sort to maintain chronological order, though for 2 entries it's less critical
+            goal.revisions.sort((a, b) => new Date(a.date) - new Date(b.date));
             saveState();
             render();
         }
@@ -453,14 +523,36 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             <div>
                                 <h4 class="text-lg font-semibold mb-2 text-center text-slate-700">Grundanforderungen</h4>
-                                <div class="h-64 mx-auto">
-                                    <canvas id="pieChartGrund"></canvas>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <h5 class="text-md font-medium text-center text-slate-600">Vor Korrektur</h5>
+                                        <div class="h-48 mx-auto">
+                                            <canvas id="pieChartGrundInitial"></canvas>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h5 class="text-md font-medium text-center text-slate-600">Nach Korrektur</h5>
+                                        <div class="h-48 mx-auto">
+                                            <canvas id="pieChartGrundCorrected"></canvas>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <div>
                                 <h4 class="text-lg font-semibold mb-2 text-center text-slate-700">Erweiterte Anforderungen</h4>
-                                <div class="h-64 mx-auto">
-                                    <canvas id="pieChartErweitert"></canvas>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <h5 class="text-md font-medium text-center text-slate-600">Vor Korrektur</h5>
+                                        <div class="h-48 mx-auto">
+                                            <canvas id="pieChartErweitertInitial"></canvas>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h5 class="text-md font-medium text-center text-slate-600">Nach Korrektur</h5>
+                                        <div class="h-48 mx-auto">
+                                            <canvas id="pieChartErweitertCorrected"></canvas>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -468,11 +560,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="bg-white p-6 rounded-xl shadow-sm">
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             <div>
-                                <h3 class="text-xl font-bold mb-4 text-center text-slate-800">Entwicklung Grundanforderungen</h3>
+                                <h3 class="text-xl font-bold mb-4 text-center text-slate-800">Entwicklung Grundanforderungen (Vor Korrektur)</h3>
                                 <canvas id="timelineGrund"></canvas>
                             </div>
                             <div>
-                                <h3 class="text-xl font-bold mb-4 text-center text-slate-800">Entwicklung Erweiterte Anforderungen</h3>
+                                <h3 class="text-xl font-bold mb-4 text-center text-slate-800">Entwicklung Erweiterte Anforderungen (Vor Korrektur)</h3>
                                 <canvas id="timelineErweitert"></canvas>
                             </div>
                         </div>
@@ -572,7 +664,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Renders all Chart.js graphs for the active subject
     function renderCharts() {
         const goals = appState.data[appState.activeSubject] || [];
-        const months = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+        // Updated months array to represent August to July
+        const months = ['Aug', 'Sep', 'Okt', 'Nov', 'Dez', 'Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul'];
 
         // Destroy existing charts to prevent memory leaks and rendering issues
         for (const chartKey in charts) {
@@ -582,31 +675,48 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // --- Pie Charts (one for Grundanforderungen, one for Erweiterte Anforderungen) ---
-        ['grund', 'erweitert'].forEach(type => {
-            const canvasId = type === 'grund' ? 'pieChartGrund' : 'pieChartErweitert';
-            const chartInstanceKey = type === 'grund' ? 'weightedPieChartGrund' : 'weightedPieChartErweitert';
-            const ctx = document.getElementById(canvasId)?.getContext('2d');
+        // --- Pie Charts (now four: Grund-Initial, Grund-Corrected, Erweitert-Initial, Erweitert-Corrected) ---
+        // Define an array of pie chart configurations
+        const pieChartConfigs = [
+            { id: 'pieChartGrundInitial', type: 'grund', revisionSource: 'initial', chartKey: 'weightedPieChartGrundInitial', opacityKey: 'pieColorOpaque' },
+            { id: 'pieChartGrundCorrected', type: 'grund', revisionSource: 'latest', chartKey: 'weightedPieChartGrundCorrected', opacityKey: 'pieColorTransparent' },
+            { id: 'pieChartErweitertInitial', type: 'erweitert', revisionSource: 'initial', chartKey: 'weightedPieChartErweitertInitial', opacityKey: 'pieColorOpaque' },
+            { id: 'pieChartErweitertCorrected', type: 'erweitert', revisionSource: 'latest', chartKey: 'weightedPieChartErweitertCorrected', opacityKey: 'pieColorTransparent' },
+        ];
+
+        pieChartConfigs.forEach(config => {
+            const ctx = document.getElementById(config.id)?.getContext('2d');
             if (!ctx) return;
 
-            // Filter goals for the current category and get the latest revision status
-            const filteredGoals = goals.filter(g => g.category === type);
+            const filteredGoals = goals.filter(g => g.category === config.type);
             const statusWeightedSums = { erreicht: 0, teilweise: 0, nicht: 0 };
 
-            // Calculate weighted sums for each status based on the LATEST revision
             filteredGoals.forEach(goal => {
-                const latestRevision = goal.revisions[goal.revisions.length - 1];
-                if (statusWeightedSums[latestRevision.status] !== undefined) {
-                    statusWeightedSums[latestRevision.status] += goal.weight;
+                let relevantRevision;
+                if (config.revisionSource === 'initial') {
+                    relevantRevision = goal.revisions[0];
+                } else if (config.revisionSource === 'latest') {
+                    // For "nach Korrektur", only consider goals that *have* been corrected (more than 1 revision)
+                    // If a goal has only one revision, it hasn't been "corrected" yet.
+                    if (goal.revisions.length > 1) {
+                         relevantRevision = goal.revisions[goal.revisions.length - 1];
+                    } else {
+                        return; // Skip this goal if it's for 'latest' but only has initial revision
+                    }
+                } else {
+                    return; // Should not happen
+                }
+
+                if (relevantRevision && statusWeightedSums[relevantRevision.status] !== undefined) {
+                    statusWeightedSums[relevantRevision.status] += goal.weight;
                 }
             });
 
             const pieData = {
                 labels: Object.values(statusInfo).map(s => s.label),
                 datasets: [{
-                    // Use weighted sums for the data
                     data: Object.keys(statusInfo).map(status => statusWeightedSums[status]),
-                    backgroundColor: Object.values(statusInfo).map(s => s.pieColor),
+                    backgroundColor: Object.values(statusInfo).map(s => s[config.opacityKey]),
                     hoverOffset: 4
                 }]
             };
@@ -636,7 +746,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             };
-            charts[chartInstanceKey] = new Chart(ctx, pieConfig);
+            charts[config.chartKey] = new Chart(ctx, pieConfig);
         });
 
         // --- Timeline charts with percentages (already considers all revisions) ---
@@ -646,16 +756,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const ctx = document.getElementById(canvasId)?.getContext('2d');
             if (!ctx) return;
 
-            const monthlyWeightedSums = months.map(() => ({ erreicht: 0, teilweise: 0, nicht: 0 }));
+            // Initialize monthly sums for the school year (Aug-Jul)
+            const monthlyWeightedSums = Array(12).fill(0).map(() => ({ erreicht: 0, teilweise: 0, nicht: 0 }));
             
-            // Iterate over all revisions for timeline to get historical data
+            // Iterate over ALL goals to get initial revision status
             goals.filter(g => g.category === type).forEach(goal => {
-                goal.revisions.forEach(rev => {
-                    const monthIndex = new Date(rev.date).getMonth();
-                    if(monthlyWeightedSums[monthIndex]) { 
-                        monthlyWeightedSums[monthIndex][rev.status] += goal.weight; // Use goal's weight for the revision
-                    }
-                });
+                const initialRevision = goal.revisions[0]; // Use the initial revision for timeline
+                const monthIndex = new Date(initialRevision.date).getMonth(); // 0-11 for Jan-Dec
+                // Map calendar month to school year month index (Aug=0, Sep=1, ..., Jul=11)
+                const schoolYearMonthIndex = (monthIndex - 7 + 12) % 12; // Adjusted for Aug start
+                
+                if(monthlyWeightedSums[schoolYearMonthIndex]) { 
+                    monthlyWeightedSums[schoolYearMonthIndex][initialRevision.status] += goal.weight; // Use goal's weight for the revision
+                }
             });
             
             const monthlyPercentages = monthlyWeightedSums.map(monthData => {
@@ -676,6 +789,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 fill: true,
                 backgroundColor: statusInfo[status].chartBg,
                 borderColor: statusInfo[status].chartBorder,
+                borderWidth: 2, // Erhöhte Linienbreite für bessere Sichtbarkeit
                 tension: 0.3,
             }));
 
@@ -711,12 +825,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const ctxB = document.getElementById('bubbleChart')?.getContext('2d');
         if (!ctxB) return;
         
-        // This object will hold the aggregated weighted sums for each bubble cell
-        const aggregatedBubbleData = {
-            'grund_initial': { 'erreicht': 0, 'teilweise': 0, 'nicht': 0 },
-            'grund_corrected': { 'erreicht': 0, 'teilweise': 0, 'nicht': 0 },
-            'erweitert_initial': { 'erreicht': 0, 'teilweise': 0, 'nicht': 0 },
-            'erweitert_corrected': { 'erreicht': 0, 'teilweise': 0, 'nicht': 0 }
+        // This object will hold the aggregated weighted sums and counts for each bubble cell
+        const aggregatedBubbleDataForVisuals = {
+            'grund_initial': { 'erreicht': {weight: 0, count: 0}, 'teilweise': {weight: 0, count: 0}, 'nicht': {weight: 0, count: 0} },
+            'grund_corrected': { 'erreicht': {weight: 0, count: 0}, 'teilweise': {weight: 0, count: 0}, 'nicht': {weight: 0, count: 0} },
+            'erweitert_initial': { 'erreicht': {weight: 0, count: 0}, 'teilweise': {weight: 0, count: 0}, 'nicht': {weight: 0, count: 0} },
+            'erweitert_corrected': { 'erreicht': {weight: 0, count: 0}, 'teilweise': {weight: 0, count: 0}, 'nicht': {weight: 0, count: 0} }
         };
 
         goals.forEach(goal => {
@@ -724,14 +838,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const latestRevision = goal.revisions[goal.revisions.length - 1];
             const isCorrected = goal.revisions.length > 1;
 
-            // Always add to 'initial' bucket based on first revision
+            // Add to 'initial' bucket based on first revision
             const initialBucketKey = `${goal.category}_initial`;
-            aggregatedBubbleData[initialBucketKey][initialRevision.status] += goal.weight;
+            aggregatedBubbleDataForVisuals[initialBucketKey][initialRevision.status].weight += goal.weight;
+            aggregatedBubbleDataForVisuals[initialBucketKey][initialRevision.status].count += 1;
+
 
             // If corrected, also add to 'corrected' bucket based on latest revision
             if (isCorrected) {
                 const correctedBucketKey = `${goal.category}_corrected`;
-                aggregatedBubbleData[correctedBucketKey][latestRevision.status] += goal.weight;
+                aggregatedBubbleDataForVisuals[correctedBucketKey][latestRevision.status].weight += goal.weight;
+                aggregatedBubbleDataForVisuals[correctedBucketKey][latestRevision.status].count += 1;
             }
         });
 
@@ -740,86 +857,51 @@ document.addEventListener('DOMContentLoaded', () => {
         const yPositions = { 'nicht': 0, 'teilweise': 1, 'erreicht': 2 };
         const jitterAmount = 0.2; // Small random offset for better visual separation
 
-        // Define and add datasets for each of the 4 main bubble types
-        // 1. Grundanforderungen vor Korrektur (Kreis, 100% Opazität)
-        Object.keys(aggregatedBubbleData.grund_initial).forEach(status => {
-            const sumWeight = aggregatedBubbleData.grund_initial[status];
-            if (sumWeight > 0) {
-                bubbleChartDatasets.push({
-                    label: `GA vor Korr. (${statusInfo[status].label})`,
-                    pointStyle: 'circle',
-                    backgroundColor: statusInfo[status].chartBgOpaque, // 100% opaque
-                    borderColor: statusInfo[status].bubbleBorderColor,
-                    borderWidth: 0, // No border
-                    data: [{
-                        x: xPositions.grund_initial + (Math.random() - 0.5) * jitterAmount,
+        // Helper to create a single dataset for a given category/type (e.g., 'grund_initial')
+        function createBubbleDataset(categoryType, pointStyle, opacityKey, legendLabelBase) { // legendLabelBase instead of legendLabelDetails
+            const dataPoints = [];
+            const backgroundColors = [];
+            const borderColors = [];
+
+            Object.keys(aggregatedBubbleDataForVisuals[categoryType]).forEach(status => {
+                const sumWeight = aggregatedBubbleDataForVisuals[categoryType][status].weight;
+                const count = aggregatedBubbleDataForVisuals[categoryType][status].count;
+                if (sumWeight > 0) {
+                    dataPoints.push({
+                        x: xPositions[categoryType] + (Math.random() - 0.5) * jitterAmount,
                         y: yPositions[status] + (Math.random() - 0.5) * jitterAmount,
-                        r: Math.sqrt(sumWeight) * 8 + 4,
-                        label: `GA vor Korr. (${statusInfo[status].label}): ${sumWeight.toFixed(1)} gew. Pkt.`
-                    }]
+                        r: Math.sqrt(sumWeight) * 8 + 4, // Radius based on weighted sum
+                        // Detailed label for tooltip
+                        label: `${legendLabelBase.trim()} - ${statusInfo[status].label}: ${sumWeight.toFixed(1)} gew. Pkt. (${count} Ziele)`
+                    });
+                    backgroundColors.push(statusInfo[status][opacityKey]);
+                    borderColors.push(statusInfo[status].bubbleBorderColor);
+                }
+            });
+
+            if (dataPoints.length > 0) {
+                bubbleChartDatasets.push({
+                    label: legendLabelBase, // Use the base label without opacity percentage
+                    pointStyle: pointStyle,
+                    backgroundColor: backgroundColors,
+                    borderColor: borderColors, // Consistent border color per data point group
+                    borderWidth: 0, // No border as per user request
+                    data: dataPoints
                 });
             }
-        });
+        }
+
+        // 1. Grundanforderungen vor Korrektur (Kreis, 100% Opazität)
+        createBubbleDataset('grund_initial', 'circle', 'chartBgOpaque', 'GA vor Korr.');
 
         // 2. Grundanforderungen nach Korrektur (Kreis, 10% Opazität)
-        Object.keys(aggregatedBubbleData.grund_corrected).forEach(status => {
-            const sumWeight = aggregatedBubbleData.grund_corrected[status];
-            if (sumWeight > 0) {
-                bubbleChartDatasets.push({
-                    label: `GA nach Korr. (${statusInfo[status].label})`,
-                    pointStyle: 'circle',
-                    backgroundColor: statusInfo[status].chartBgTransparent, // 10% opaque
-                    borderColor: statusInfo[status].bubbleBorderColor,
-                    borderWidth: 0, // No border
-                    data: [{
-                        x: xPositions.grund_corrected + (Math.random() - 0.5) * jitterAmount,
-                        y: yPositions[status] + (Math.random() - 0.5) * jitterAmount,
-                        r: Math.sqrt(sumWeight) * 8 + 4,
-                        label: `GA nach Korr. (${statusInfo[status].label}): ${sumWeight.toFixed(1)} gew. Pkt.`
-                    }]
-                });
-            }
-        });
+        createBubbleDataset('grund_corrected', 'circle', 'chartBgTransparent', 'GA nach Korr.');
 
         // 3. Erweiterte Anforderungen vor Korrektur (Quadrat, 100% Opazität)
-        Object.keys(aggregatedBubbleData.erweitert_initial).forEach(status => {
-            const sumWeight = aggregatedBubbleData.erweitert_initial[status];
-            if (sumWeight > 0) {
-                bubbleChartDatasets.push({
-                    label: `EA vor Korr. (${statusInfo[status].label})`,
-                    pointStyle: 'rect',
-                    backgroundColor: statusInfo[status].chartBgOpaque, // 100% opaque
-                    borderColor: statusInfo[status].bubbleBorderColor,
-                    borderWidth: 0, // No border
-                    data: [{
-                        x: xPositions.erweitert_initial + (Math.random() - 0.5) * jitterAmount,
-                        y: yPositions[status] + (Math.random() - 0.5) * jitterAmount,
-                        r: Math.sqrt(sumWeight) * 8 + 4,
-                        label: `EA vor Korr. (${statusInfo[status].label}): ${sumWeight.toFixed(1)} gew. Pkt.`
-                    }]
-                });
-            }
-        });
+        createBubbleDataset('erweitert_initial', 'rect', 'chartBgOpaque', 'EA vor Korr.');
 
         // 4. Erweiterte Anforderungen nach Korrektur (Quadrat, 10% Opazität)
-        Object.keys(aggregatedBubbleData.erweitert_corrected).forEach(status => {
-            const sumWeight = aggregatedBubbleData.erweitert_corrected[status];
-            if (sumWeight > 0) {
-                bubbleChartDatasets.push({
-                    label: `EA nach Korr. (${statusInfo[status].label})`,
-                    pointStyle: 'rect',
-                    backgroundColor: statusInfo[status].chartBgTransparent, // 10% opaque
-                    borderColor: statusInfo[status].bubbleBorderColor,
-                    borderWidth: 0, // No border
-                    data: [{
-                        x: xPositions.erweitert_corrected + (Math.random() - 0.5) * jitterAmount,
-                        y: yPositions[status] + (Math.random() - 0.5) * jitterAmount,
-                        r: Math.sqrt(sumWeight) * 8 + 4,
-                        label: `EA nach Korr. (${statusInfo[status].label}): ${sumWeight.toFixed(1)} gew. Pkt.`
-                    }]
-                });
-            }
-        });
+        createBubbleDataset('erweitert_corrected', 'rect', 'chartBgTransparent', 'EA nach Korr.');
 
 
         const configB = {
@@ -871,13 +953,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     legend: {
                         position: 'bottom',
                         labels: {
-                            usePointStyle: true, // Make the legend use the point styles (circle/rect, solid/dashed)
+                            usePointStyle: true, // Make the legend use the point styles (circle/rect)
                             generateLabels: function(chart) {
                                 const data = chart.data;
                                 if (data.datasets.length) {
                                     return data.datasets.map((dataset, i) => {
                                         return {
-                                            text: dataset.label,
+                                            text: dataset.label, // Use the updated label without opacity percentage
                                             fillStyle: dataset.backgroundColor[0], // Take the first color as representative
                                             strokeStyle: dataset.borderColor[0], // Take the first border color
                                             pointStyle: dataset.pointStyle,
@@ -919,7 +1001,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!overviewGrid) return;
 
         if (Object.keys(appState.data).length === 0) {
-            overviewGrid.innerHTML = `<p class="text-slate-500 text-center col-span-full py-10">Fügen Sie Fächer hinzu, um eine Übersicht zu erhalten.</p>`;
+            overviewGrid.innerHTML = `<p class="text-slate-500 text-center col-span-full py-10">Noch keine Fächer erfasst.</p>`;
             return;
         }
 
