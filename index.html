@@ -39,29 +39,49 @@
         <aside class="w-72 bg-white p-4 border-r border-slate-200 flex flex-col shrink-0">
             <div class="flex items-center gap-3 mb-8">
                 <div class="p-2 bg-indigo-100 rounded-lg">
-                   <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-indigo-600"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2 0 0 1 0-5H20"></path></svg>
+                   <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-indigo-600"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path></svg>
                 </div>
                 <h1 class="text-xl font-bold text-slate-900">Kompetenz-Portfolio</h1>
             </div>
 
-            <!-- Student Management -->
-            <div class="flex justify-between items-center mb-3">
-                <h2 class="font-semibold text-slate-500 text-sm uppercase tracking-wider">Schüler</h2>
-                <button id="showAddStudentBtn" class="p-1 text-indigo-600 hover:bg-indigo-100 rounded-lg transition-colors" title="Neuen Schüler hinzufügen">
+            <!-- Student Management Dropdown -->
+            <div class="flex flex-col gap-2 mb-6">
+                <label for="student-select" class="font-semibold text-slate-500 text-sm uppercase tracking-wider">Aktueller Schüler</label>
+                <div class="relative">
+                    <select id="student-select" class="block w-full p-2 border border-slate-300 rounded-md bg-white pr-8 text-slate-800 appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <!-- Options will be populated by JS -->
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-700">
+                        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <button id="showAddStudentBtn" class="w-full flex items-center justify-center gap-2 px-3 py-2 bg-indigo-600 text-white font-bold rounded-md hover:bg-indigo-700 transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    <span>Neuen Schüler hinzufügen</span>
                 </button>
             </div>
-            <div id="addStudentForm" class="hidden mb-4 p-3 bg-slate-50 rounded-lg transition-all">
+            <div id="addStudentForm" class="hidden mb-6 p-3 bg-slate-50 rounded-lg transition-all">
                 <input type="text" id="newStudentName" placeholder="Name des Schülers..." class="w-full px-2 py-1.5 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
                 <div class="flex gap-2 mt-2">
                     <button id="addStudentBtn" class="flex-1 px-3 py-1.5 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700 transition-colors">Hinzufügen</button>
                     <button id="cancelAddStudentBtn" class="flex-1 px-3 py-1.5 bg-slate-200 text-slate-700 text-sm rounded-md hover:bg-slate-300 transition-colors">Abbrechen</button>
                 </div>
             </div>
-            <nav id="student-nav" class="space-y-1 overflow-y-auto mb-6 custom-scrollbar"></nav>
 
+            <!-- Master Goals Button -->
+            <div class="mb-4">
+                <button id="showMasterGoalsBtn" class="w-full flex items-center gap-2 px-3 py-2 rounded-md transition-colors text-slate-700 hover:bg-slate-100">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg>
+                    <span class="font-semibold">Master-Lernziele</span>
+                </button>
+            </div>
 
-            <!-- Overview Button (now specific to active student) -->
+            <hr class="border-t border-slate-200 my-4"> <!-- Separator -->
+
+            <!-- Overview Button for active student -->
             <div class="mb-4">
                 <button id="showOverviewBtn" class="w-full flex items-center gap-2 px-3 py-2 rounded-md transition-colors text-slate-700 hover:bg-slate-100">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="M18.7 8.3L12 15l-3.3-3.3c-.6-.6-1.4-.6-2-.1-.6.5-.7 1.4-.2 2L10 18l10-10"></path></svg>
@@ -71,9 +91,7 @@
 
             <div class="flex justify-between items-center mb-3">
                 <h2 class="font-semibold text-slate-500 text-sm uppercase tracking-wider">Fächer (Aktueller Schüler)</h2>
-                <!-- Add Subject Button is now part of the main content when a student is selected -->
             </div>
-
             <nav id="subject-nav" class="space-y-1 overflow-y-auto custom-scrollbar"></nav>
         </aside>
 
@@ -89,10 +107,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- STATE MANAGEMENT ---
     const STORAGE_KEY = 'kompetenzPortfolioApp';
     let appState = {
-        students: {}, // studentId: { name: 'Student Name', subjects: { 'FachName': [goals] } }
+        students: {}, // studentId: { id, name, subjects: { 'FachName': [goals_with_revisions_and_masterGoalId] } }
+        masterGoals: [], // [{ id, subjectName, text, category, weight }]
         activeStudent: null, // ID of the currently selected student
-        activeSubject: null, // null for overview, subject name for subject view
-        masterSubjects: {} // Global template for goals, copied to new students
+        activeSubject: null, // null for overview, subject name for subject view (for active student)
+        viewMode: 'studentOverview' // 'studentOverview', 'studentSubject', 'masterGoals'
     };
 
     // Defines information for each status category, including Tailwind colors and Chart.js colors
@@ -137,24 +156,20 @@ document.addEventListener('DOMContentLoaded', () => {
         timelineGrund: null,
         timelineErweitert: null,
         bubbleChart: null,
-        weightedPieChartGrundInitial: null, // New chart key
-        weightedPieChartGrundCorrected: null, // New chart key
-        weightedPieChartErweitertInitial: null, // New chart key
-        weightedPieChartErweitertCorrected: null, // New chart key
+        weightedPieChartGrundInitial: null,
+        weightedPieChartGrundCorrected: null,
+        weightedPieChartErweitertInitial: null,
+        weightedPieChartErweitertCorrected: null,
     };
 
     // --- DOM SELECTORS ---
     const mainContent = document.getElementById('main-content');
     const subjectNav = document.getElementById('subject-nav');
-    const studentNav = document.getElementById('student-nav'); // New
-    const showAddSubjectBtn = document.getElementById('showAddSubjectBtn'); // This will be repurposed
-    const addSubjectForm = document.getElementById('addSubjectForm'); // This will be repurposed
-    const newSubjectNameInput = document.getElementById('newSubjectName'); // This will be repurposed
-    const addSubjectBtn = document.getElementById('addSubjectBtn'); // This will be repurposed
-    const cancelAddSubjectBtn = document.getElementById('cancelAddSubjectBtn'); // This will be repurposed
+    const studentSelect = document.getElementById('student-select'); // New dropdown
     const showOverviewBtn = document.getElementById('showOverviewBtn');
+    const showMasterGoalsBtn = document.getElementById('showMasterGoalsBtn'); // New button
 
-    // New student management selectors
+    // Student management selectors
     const showAddStudentBtn = document.getElementById('showAddStudentBtn');
     const addStudentForm = document.getElementById('addStudentForm');
     const newStudentNameInput = document.getElementById('newStudentName');
@@ -167,69 +182,88 @@ document.addEventListener('DOMContentLoaded', () => {
         const savedState = localStorage.getItem(STORAGE_KEY);
         if (savedState) {
             appState = JSON.parse(savedState);
-            // Ensure masterSubjects are present in loaded state or initialize them
-            if (!appState.masterSubjects || Object.keys(appState.masterSubjects).length === 0) {
-                 initializeMasterSubjects();
+            // Ensure masterGoals are always present and correctly structured
+            if (!appState.masterGoals || !Array.isArray(appState.masterGoals) || appState.masterGoals.length === 0) {
+                 initializeMasterGoals();
             }
+            // Add any missing master goals to existing students (e.g., if master was updated in another session)
+            Object.values(appState.students).forEach(student => {
+                appState.masterGoals.forEach(mGoal => {
+                    const subjectGoals = student.subjects[mGoal.subjectName] || [];
+                    const existsInStudent = subjectGoals.some(sGoal => sGoal.masterGoalId === mGoal.id);
+                    if (!existsInStudent) {
+                        if (!student.subjects[mGoal.subjectName]) {
+                            student.subjects[mGoal.subjectName] = [];
+                        }
+                        student.subjects[mGoal.subjectName].push(cloneMasterGoalToStudentGoal(mGoal));
+                    }
+                });
+            });
         } else {
-            // Default sample data for demonstration
-            initializeMasterSubjects(); // Setup master goals first
+            // Initial setup if no saved state
+            initializeMasterGoals(); // Setup master goals first
             
             // Add a default student and clone master goals for them
-            const defaultStudentId = 'student_default';
+            const defaultStudentId = 'student_' + Date.now();
             appState.students[defaultStudentId] = {
                 id: defaultStudentId,
                 name: 'Max Mustermann',
-                subjects: cloneMasterGoalsForNewStudent()
+                subjects: {} // Subjects will be populated from masterGoals below
             };
+            appState.masterGoals.forEach(mGoal => {
+                if (!appState.students[defaultStudentId].subjects[mGoal.subjectName]) {
+                    appState.students[defaultStudentId].subjects[mGoal.subjectName] = [];
+                }
+                appState.students[defaultStudentId].subjects[mGoal.subjectName].push(cloneMasterGoalToStudentGoal(mGoal));
+            });
             appState.activeStudent = defaultStudentId;
-            appState.activeSubject = null; // Start on overview page for the default student
-        }
-        // Ensure active student is set if none is, or if it points to a non-existent one
-        if (!appState.activeStudent || !appState.students[appState.activeStudent]) {
-            appState.activeStudent = Object.keys(appState.students)[0] || null;
-        }
-        // If active subject points to non-existent subject, set to null
-        if (appState.activeStudent && appState.activeSubject !== null && !appState.students[appState.activeStudent].subjects[appState.activeSubject]) {
             appState.activeSubject = null;
+            appState.viewMode = 'studentOverview';
+        }
+
+        // Ensure active student and subject are valid after load (e.g., if a student was deleted)
+        if (appState.activeStudent && !appState.students[appState.activeStudent]) {
+            appState.activeStudent = Object.keys(appState.students)[0] || null;
+            appState.activeSubject = null;
+            appState.viewMode = 'studentOverview';
+        }
+        if (appState.activeStudent && appState.activeSubject && (!appState.students[appState.activeStudent].subjects || !appState.students[appState.activeStudent].subjects[appState.activeSubject])) {
+            appState.activeSubject = null;
+            appState.viewMode = 'studentOverview';
+        }
+        if (!appState.activeStudent && Object.keys(appState.students).length > 0) {
+            appState.activeStudent = Object.keys(appState.students)[0];
+            appState.activeSubject = null;
+            appState.viewMode = 'studentOverview';
         }
     }
 
     // Initializes master subjects with sample data
-    function initializeMasterSubjects() {
-        appState.masterSubjects = {
-            'Mathematik': [
-                { text: 'Bruchrechnung verstehen', category: 'grund', weight: 3 },
-                { text: 'Gleichungen lösen', category: 'grund', weight: 4 },
-                { text: 'Komplexe Textaufgaben', category: 'erweitert', weight: 5 },
-                { text: 'Logarithmen', category: 'erweitert', weight: 3 },
-                { text: 'Geometrie Grundlagen', category: 'grund', weight: 2 }
-            ],
-            'Deutsch': [
-                { text: 'Rechtschreibung', category: 'grund', weight: 4 },
-                { text: 'Grammatik Anwendung', category: 'grund', weight: 3 },
-                { text: 'Aufsatz schreiben', category: 'erweitert', weight: 5 }
-            ],
-            'Englisch': [
-                { text: 'Vokabeln A1', category: 'grund', weight: 3 },
-                { text: 'Konversation', category: 'erweitert', weight: 4 }
-            ]
-        };
+    function initializeMasterGoals() {
+        appState.masterGoals = [
+            { id: 'mg_' + Date.now() + '_math_1', subjectName: 'Mathematik', text: 'Bruchrechnung verstehen', category: 'grund', weight: 3 },
+            { id: 'mg_' + Date.now() + '_math_2', subjectName: 'Mathematik', text: 'Gleichungen lösen', category: 'grund', weight: 4 },
+            { id: 'mg_' + Date.now() + '_math_3', subjectName: 'Mathematik', text: 'Komplexe Textaufgaben', category: 'erweitert', weight: 5 },
+            { id: 'mg_' + Date.now() + '_math_4', subjectName: 'Mathematik', text: 'Logarithmen', category: 'erweitert', weight: 3 },
+            { id: 'mg_' + Date.now() + '_math_5', subjectName: 'Mathematik', text: 'Geometrie Grundlagen', category: 'grund', weight: 2 },
+            { id: 'mg_' + Date.now() + '_deutsch_1', subjectName: 'Deutsch', text: 'Rechtschreibung beherrschen', category: 'grund', weight: 4 },
+            { id: 'mg_' + Date.now() + '_deutsch_2', subjectName: 'Deutsch', text: 'Grammatik anwenden', category: 'grund', weight: 3 },
+            { id: 'mg_' + Date.now() + '_deutsch_3', subjectName: 'Deutsch', text: 'Aufsatz strukturieren', category: 'erweitert', weight: 5 },
+            { id: 'mg_' + Date.now() + '_englisch_1', subjectName: 'Englisch', text: 'Vokabeln A1 beherrschen', category: 'grund', weight: 3 },
+            { id: 'mg_' + Date.now() + '_englisch_2', subjectName: 'Englisch', text: 'Konversation führen', category: 'erweitert', weight: 4 }
+        ];
     }
 
-    // Creates a deep copy of master goals for a new student
-    function cloneMasterGoalsForNewStudent() {
-        const clonedSubjects = {};
-        for (const subjectName in appState.masterSubjects) {
-            clonedSubjects[subjectName] = appState.masterSubjects[subjectName].map(goal => ({
-                id: Date.now() + Math.random(), // Ensure unique ID for each goal instance
-                text: goal.text,
-                category: goal.category,
-                weight: goal.weight,
-                revisions: [] // Start with no revisions for the new student
-            }));
-        }
-        return clonedSubjects;
+    // Clones a master goal into a student-specific goal object
+    function cloneMasterGoalToStudentGoal(masterGoal) {
+        return {
+            id: 'sg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9), // Unique ID for student's instance
+            masterGoalId: masterGoal.id, // Reference to master goal
+            text: masterGoal.text,
+            category: masterGoal.category,
+            weight: masterGoal.weight,
+            revisions: [] // Always start with empty revisions for a new student goal
+        };
     }
 
     // Saves the current application state to localStorage
@@ -242,13 +276,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const name = newStudentNameInput.value.trim();
         if (name && !Object.values(appState.students).some(s => s.name === name)) {
             const studentId = 'student_' + Date.now();
+            const newStudentSubjects = {};
+
+            // Clone all current master goals for the new student
+            appState.masterGoals.forEach(mGoal => {
+                if (!newStudentSubjects[mGoal.subjectName]) {
+                    newStudentSubjects[mGoal.subjectName] = [];
+                }
+                newStudentSubjects[mGoal.subjectName].push(cloneMasterGoalToStudentGoal(mGoal));
+            });
+
             appState.students[studentId] = {
                 id: studentId,
                 name: name,
-                subjects: cloneMasterGoalsForNewStudent() // Clone master goals
+                subjects: newStudentSubjects
             };
             appState.activeStudent = studentId; // Set new student as active
             appState.activeSubject = null; // Go to overview for new student
+            appState.viewMode = 'studentOverview';
             saveState();
             render();
             newStudentNameInput.value = '';
@@ -265,52 +310,77 @@ document.addEventListener('DOMContentLoaded', () => {
             if (appState.activeStudent === studentId) {
                 appState.activeStudent = Object.keys(appState.students)[0] || null;
                 appState.activeSubject = null;
+                appState.viewMode = 'studentOverview';
             }
             saveState();
             render();
         });
     }
 
-    // Adds a new subject to the active student's portfolio
-    function addSubject() {
-        if (!appState.activeStudent) return;
-        const name = newSubjectNameInput.value.trim();
-        if (name && !appState.students[appState.activeStudent].subjects[name]) {
-            appState.students[appState.activeStudent].subjects[name] = [];
-            appState.activeSubject = name;
-            saveState();
-            render();
-            newSubjectNameInput.value = '';
-            addSubjectForm.classList.add('hidden');
-        }
-    }
-    
-    // Removes a subject from the active student's portfolio after user confirmation
-    function removeSubject(subjectName) {
-        if (!appState.activeStudent) return;
-        const message = `Sind Sie sicher, dass Sie das Fach "${subjectName}" und alle zugehörigen Lernziele für ${appState.students[appState.activeStudent].name} löschen möchten?`;
-        showConfirmationModal(message, () => {
-            delete appState.students[appState.activeStudent].subjects[subjectName];
-            if (appState.activeSubject === subjectName) {
-                appState.activeSubject = null; // Go to overview after deleting active subject
-            }
-            saveState();
-            render();
-        });
-    }
+    // Adds a new master goal and propagates it to all students
+    function addMasterGoal(newMasterGoal) {
+        // Generate a unique ID for the new master goal
+        newMasterGoal.id = 'mg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        appState.masterGoals.push(newMasterGoal);
 
-    // Adds a new learning goal to the active student's active subject
-    function addGoal(goal) {
-        if (!appState.activeStudent || !appState.activeSubject) return;
-        appState.students[appState.activeStudent].subjects[appState.activeSubject].push({ 
-            id: Date.now(),
-            text: goal.text,
-            category: goal.category,
-            weight: goal.weight,
-            revisions: [{ date: goal.date, status: goal.status }] // Initial revision
+        // Propagate to all existing students
+        Object.values(appState.students).forEach(student => {
+            if (!student.subjects[newMasterGoal.subjectName]) {
+                student.subjects[newMasterGoal.subjectName] = [];
+            }
+            student.subjects[newMasterGoal.subjectName].push(cloneMasterGoalToStudentGoal(newMasterGoal));
         });
         saveState();
-        render();
+        render(); // Re-render to update Master Goals page and student views
+    }
+
+    // Updates an existing master goal and propagates changes to all students
+    function updateMasterGoal(masterGoalId, updatedFields) {
+        const masterGoalIndex = appState.masterGoals.findIndex(mg => mg.id === masterGoalId);
+        if (masterGoalIndex !== -1) {
+            const masterGoal = appState.masterGoals[masterGoalIndex];
+            // Update master goal properties
+            Object.assign(masterGoal, updatedFields);
+
+            // Propagate changes to all students
+            Object.values(appState.students).forEach(student => {
+                const studentGoal = Object.values(student.subjects).flat().find(sg => sg.masterGoalId === masterGoalId);
+                if (studentGoal) {
+                    // Update only master-controlled fields (text, category, weight)
+                    studentGoal.text = masterGoal.text;
+                    studentGoal.category = masterGoal.category;
+                    studentGoal.weight = masterGoal.weight;
+                    // Note: revisions (assessments) are NOT touched
+                }
+            });
+            saveState();
+            render();
+        }
+    }
+
+    // Removes a master goal and deletes it from all students
+    function removeMasterGoal(masterGoalId) {
+        const masterGoal = appState.masterGoals.find(mg => mg.id === masterGoalId);
+        if (!masterGoal) return;
+
+        const message = `Sind Sie sicher, dass Sie das Master-Lernziel "${masterGoal.text}" und alle Instanzen in Schülerportfolios löschen möchten?`;
+        showConfirmationModal(message, () => {
+            // Remove from masterGoals
+            appState.masterGoals = appState.masterGoals.filter(mg => mg.id !== masterGoalId);
+
+            // Remove from all students
+            Object.values(appState.students).forEach(student => {
+                for (const subjectName in student.subjects) {
+                    student.subjects[subjectName] = student.subjects[subjectName].filter(sg => sg.masterGoalId !== masterGoalId);
+                    // If a subject becomes empty after deletion, remove it
+                    if (student.subjects[subjectName].length === 0) {
+                        delete student.subjects[subjectName];
+                    }
+                }
+            });
+            saveState();
+            render();
+        });
     }
 
     // Updates a specific revision (initial or final) of a goal for the active student
@@ -323,13 +393,21 @@ document.addEventListener('DOMContentLoaded', () => {
             const goal = goals[goalIndex];
 
             if (isInitialRevision) {
-                goal.revisions[0] = { date: newDate, status: newStatus };
-            } else {
-                if (goal.revisions.length === 0) { // If no initial revision, add it first
-                    goal.revisions.push({ date: newDate, status: newStatus });
-                } else if (goal.revisions.length === 1) {
+                // Ensure initial revision exists, if not, create it
+                if (goal.revisions.length === 0) {
                     goal.revisions.push({ date: newDate, status: newStatus });
                 } else {
+                    goal.revisions[0] = { date: newDate, status: newStatus };
+                }
+            } else {
+                // This is for "Nach Korrektur".
+                // If only one revision exists (initial), add a second one.
+                // Otherwise, update the last revision.
+                if (goal.revisions.length === 0) { // If no initial revision, add it as first
+                    goal.revisions.push({ date: newDate, status: newStatus });
+                } else if (goal.revisions.length === 1) { // If only initial, add as second
+                    goal.revisions.push({ date: newDate, status: newStatus });
+                } else { // Update last
                     goal.revisions[goal.revisions.length - 1] = { date: newDate, status: newStatus };
                 }
             }
@@ -341,18 +419,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Removes a learning goal from the active student's active subject
+    // This function now only applies to student goals, which means they were master goals
+    // We confirm that it removes ONLY the student's instance, not the master
+    // For now, let's allow only master goals to be deleted to avoid inconsistencies.
+    // If a student goal needs to be deleted, it implies the master goal also needs to be gone.
+    // So this function should only be called if the master goal was already removed.
+    // For now, I'll keep the function but prevent direct removal from the student's view,
+    // only allowing update.
     function removeGoal(goalId) {
-        if (!appState.activeStudent || !appState.activeSubject) return;
-        const goals = appState.students[appState.activeStudent].subjects[appState.activeSubject];
-        appState.students[appState.activeStudent].subjects[appState.activeSubject] = goals.filter(g => g.id !== goalId);
-        saveState();
-        render();
+        // This function will not be directly callable from the student's subject list anymore
+        // as goals are managed from the master list.
+        // If a goal needs to be removed for a student, it must be removed from masterGoals.
+        console.warn("Direct removal of student goal is disabled. Please remove from Master-Lernziele instead.");
     }
     
     // --- MODAL DIALOG for confirmations and updates ---
     // Displays a custom confirmation modal instead of native alert/confirm
     function showConfirmationModal(message, onConfirm) {
-        // Remove existing modal first to prevent duplicates
         const existingModal = document.getElementById('confirmationModal');
         if (existingModal) {
             existingModal.remove();
@@ -386,7 +469,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Displays a modal to update a goal's status
     function showUpdateStatusModal(goalId) {
-        // Remove existing modal first to prevent duplicates
         const existingModal = document.getElementById('updateStatusModal');
         if (existingModal) {
             existingModal.remove();
@@ -405,42 +487,42 @@ document.addEventListener('DOMContentLoaded', () => {
                     <h3 class="text-lg font-semibold mb-3 text-slate-800">Lernziel Status aktualisieren</h3>
 
                     <!-- Section for Initial Evaluation -->
-                    <div class="mb-4 border p-3 rounded-md bg-slate-50"> <!-- Reduced p-4 to p-3 -->
-                        <h4 class="font-medium text-slate-700 mb-2 text-sm">Beurteilung vor Korrektur</h4> <!-- Reduced mb-3 to mb-2, added text-sm -->
-                        <div class="space-y-1.5"> <!-- Reduced space-y-2 to space-y-1.5 -->
+                    <div class="mb-4 border p-3 rounded-md bg-slate-50">
+                        <h4 class="font-medium text-slate-700 mb-2 text-sm">Beurteilung vor Korrektur</h4>
+                        <div class="space-y-1.5">
                             <div>
-                                <label class="block text-xs font-medium text-slate-600 mb-1">Status:</label> <!-- Changed text-sm to text-xs -->
-                                <select id="initialStatusSelect" class="w-full p-1.5 border border-slate-300 rounded-md text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"> <!-- Reduced p-2 to p-1.5 -->
+                                <label class="block text-xs font-medium text-slate-600 mb-1">Status:</label>
+                                <select id="initialStatusSelect" class="w-full p-1.5 border border-slate-300 rounded-md text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
                                     <option value="erreicht">Erreicht</option>
                                     <option value="teilweise">Teilweise</option>
                                     <option value="nicht">Nicht erreicht</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-xs font-medium text-slate-600 mb-1">Datum:</label> <!-- Changed text-sm to text-xs -->
-                                <input type="date" id="initialDateInput" required class="w-full p-1.5 border border-slate-300 rounded-md text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"> <!-- Reduced p-2 to p-1.5 -->
+                                <label class="block text-xs font-medium text-slate-600 mb-1">Datum:</label>
+                                <input type="date" id="initialDateInput" required class="w-full p-1.5 border border-slate-300 rounded-md text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
                             </div>
-                            <button id="updateInitialBtn" class="w-full bg-indigo-600 text-white font-bold py-1.5 px-3 rounded-md text-sm hover:bg-indigo-700 transition">Aktualisieren (Vor Korrektur)</button> <!-- Reduced py-2 to py-1.5, px-4 to px-3, added text-sm -->
+                            <button id="updateInitialBtn" class="w-full bg-indigo-600 text-white font-bold py-1.5 px-3 rounded-md text-sm hover:bg-indigo-700 transition">Aktualisieren (Vor Korrektur)</button>
                         </div>
                     </div>
 
                     <!-- Section for Final Evaluation -->
-                    <div class="mb-4 border p-3 rounded-md bg-slate-50"> <!-- Reduced p-4 to p-3 -->
-                        <h4 class="font-medium text-slate-700 mb-2 text-sm">Beurteilung nach Korrektur</h4> <!-- Reduced mb-3 to mb-2, added text-sm -->
-                        <div class="space-y-1.5"> <!-- Reduced space-y-2 to space-y-1.5 -->
+                    <div class="mb-4 border p-3 rounded-md bg-slate-50">
+                        <h4 class="font-medium text-slate-700 mb-2 text-sm">Beurteilung nach Korrektur</h4>
+                        <div class="space-y-1.5">
                             <div>
-                                <label class="block text-xs font-medium text-slate-600 mb-1">Status:</label> <!-- Changed text-sm to text-xs -->
-                                <select id="finalStatusSelect" class="w-full p-1.5 border border-slate-300 rounded-md text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"> <!-- Reduced p-2 to p-1.5 -->
+                                <label class="block text-xs font-medium text-slate-600 mb-1">Status:</label>
+                                <select id="finalStatusSelect" class="w-full p-1.5 border border-slate-300 rounded-md text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
                                     <option value="erreicht">Erreicht</option>
                                     <option value="teilweise">Teilweise</option>
                                     <option value="nicht">Nicht erreicht</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-xs font-medium text-slate-600 mb-1">Datum:</label> <!-- Changed text-sm to text-xs -->
-                                <input type="date" id="finalDateInput" required class="w-full p-1.5 border border-slate-300 rounded-md text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"> <!-- Reduced p-2 to p-1.5 -->
+                                <label class="block text-xs font-medium text-slate-600 mb-1">Datum:</label>
+                                <input type="date" id="finalDateInput" required class="w-full p-1.5 border border-slate-300 rounded-md text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
                             </div>
-                            <button id="updateFinalBtn" class="w-full bg-emerald-600 text-white font-bold py-1.5 px-3 rounded-md text-sm hover:bg-emerald-700 transition">Aktualisieren (Nach Korrektur)</button> <!-- Reduced py-2 to py-1.5, px-4 to px-3, added text-sm -->
+                            <button id="updateFinalBtn" class="w-full bg-emerald-600 text-white font-bold py-1.5 px-3 rounded-md text-sm hover:bg-emerald-700 transition">Aktualisieren (Nach Korrektur)</button>
                         </div>
                     </div>
 
@@ -472,7 +554,6 @@ document.addEventListener('DOMContentLoaded', () => {
             initialStatusSelect.value = 'nicht'; // Default to 'nicht erreicht' for new goals
         }
 
-
         // Populate final fields
         if (finalRevision) {
             finalStatusSelect.value = finalRevision.status;
@@ -498,45 +579,116 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
+    // Displays a modal to edit a master goal
+    function showEditMasterGoalModal(masterGoalId) {
+        const existingModal = document.getElementById('editMasterGoalModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+
+        const masterGoal = appState.masterGoals.find(mg => mg.id === masterGoalId);
+        if (!masterGoal) return;
+
+        const modalHTML = `
+            <div id="editMasterGoalModal" class="fixed inset-0 bg-slate-900 bg-opacity-50 flex items-center justify-center z-50">
+                <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-md max-h-[70vh] flex flex-col">
+                    <h3 class="text-xl font-semibold mb-4 text-slate-800">Master-Lernziel bearbeiten</h3>
+                    <form id="editMasterGoalForm" class="space-y-4 overflow-y-auto pr-2 custom-scrollbar">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Text:</label>
+                            <input type="text" id="editMasterGoalText" class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500" value="${masterGoal.text}" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Fach:</label>
+                            <input type="text" id="editMasterGoalSubject" class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500" value="${masterGoal.subjectName}" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Kategorie:</label>
+                            <select id="editMasterGoalCategory" class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500">
+                                <option value="grund">Grundanforderung</option>
+                                <option value="erweitert">Erweiterte Anforderung</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Gewichtung (1-5):</label>
+                            <input type="range" id="editMasterGoalWeight" min="1" max="5" class="w-full" value="${masterGoal.weight}">
+                            <span id="editMasterGoalWeightValue" class="text-sm text-slate-600">${masterGoal.weight}</span>
+                        </div>
+                        <div class="flex justify-end gap-3 mt-4">
+                            <button type="button" id="cancelEditMasterGoalBtn" class="px-4 py-2 bg-slate-200 text-slate-800 rounded-md hover:bg-slate-300 transition">Abbrechen</button>
+                            <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition">Speichern</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+        const modal = document.getElementById('editMasterGoalModal');
+        const form = document.getElementById('editMasterGoalForm');
+        const textInput = document.getElementById('editMasterGoalText');
+        const subjectInput = document.getElementById('editMasterGoalSubject');
+        const categorySelect = document.getElementById('editMasterGoalCategory');
+        const weightInput = document.getElementById('editMasterGoalWeight');
+        const weightValueSpan = document.getElementById('editMasterGoalWeightValue');
+        const cancelBtn = document.getElementById('cancelEditMasterGoalBtn');
+
+        categorySelect.value = masterGoal.category;
+        weightInput.oninput = (e) => {
+            weightValueSpan.textContent = e.target.value;
+        };
+
+        form.onsubmit = (e) => {
+            e.preventDefault();
+            const updatedFields = {
+                text: textInput.value.trim(),
+                subjectName: subjectInput.value.trim(),
+                category: categorySelect.value,
+                weight: parseInt(weightInput.value, 10)
+            };
+            updateMasterGoal(masterGoalId, updatedFields);
+            modal.remove();
+        };
+
+        cancelBtn.onclick = () => {
+            modal.remove();
+        };
+    }
+
     // --- RENDERING FUNCTIONS ---
 
     // Renders the sidebar with student and subject navigation
     function renderSidebar() {
-        // Render students
-        studentNav.innerHTML = '';
-        Object.values(appState.students).forEach(student => {
-            const isActiveStudent = student.id === appState.activeStudent;
-            const container = document.createElement('div');
-            container.className = 'flex items-center group';
+        // Render students dropdown
+        studentSelect.innerHTML = '';
+        if (Object.keys(appState.students).length === 0) {
+            studentSelect.innerHTML = '<option value="">Keine Schüler vorhanden</option>';
+            studentSelect.disabled = true;
+        } else {
+            studentSelect.disabled = false;
+            Object.values(appState.students).forEach(student => {
+                const option = document.createElement('option');
+                option.value = student.id;
+                option.textContent = student.name;
+                studentSelect.appendChild(option);
+            });
+            studentSelect.value = appState.activeStudent;
+        }
 
-            const button = document.createElement('button');
-            button.className = `flex-1 text-left px-3 py-2 rounded-md transition-colors text-slate-700 ${isActiveStudent ? 'bg-indigo-100 text-indigo-700 font-semibold' : 'hover:bg-slate-100'}`;
-            button.textContent = student.name;
-            button.onclick = () => {
-                appState.activeStudent = student.id;
-                appState.activeSubject = null; // Go to overview when changing student
-                saveState();
-                render();
-            };
-
-            const deleteBtn = document.createElement('button');
-            deleteBtn.className = 'p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-100 rounded-md transition-all opacity-0 group-hover:opacity-100';
-            deleteBtn.title = `Schüler "${student.name}" löschen`;
-            deleteBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
-            deleteBtn.onclick = (e) => {
-                e.stopPropagation();
-                removeStudent(student.id);
-            };
-
-            container.appendChild(button);
-            container.appendChild(deleteBtn);
-            studentNav.appendChild(container);
-        });
+        // Attach event listener for student selection
+        studentSelect.onchange = (e) => {
+            appState.activeStudent = e.target.value;
+            appState.activeSubject = null; // Go to overview when changing student
+            appState.viewMode = 'studentOverview';
+            saveState();
+            render();
+        };
 
         // Render subjects for the active student
         subjectNav.innerHTML = '';
-        if (appState.activeStudent && appState.students[appState.activeStudent]) {
-            Object.keys(appState.students[appState.activeStudent].subjects).forEach(name => {
+        if (appState.activeStudent && appState.students[appState.activeStudent] && appState.viewMode !== 'masterGoals') {
+            const subjects = appState.students[appState.activeStudent].subjects;
+            Object.keys(subjects).forEach(name => {
                 const isActiveSubject = name === appState.activeSubject;
                 const container = document.createElement('div');
                 container.className = 'flex items-center group';
@@ -546,6 +698,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 button.textContent = name;
                 button.onclick = () => {
                     appState.activeSubject = name;
+                    appState.viewMode = 'studentSubject';
                     saveState();
                     render();
                 };
@@ -556,7 +709,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 deleteBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
                 deleteBtn.onclick = (e) => {
                     e.stopPropagation();
-                    removeSubject(name);
+                    // For subjects within a student, this means removing only the student's association with that subject
+                    // This implies the subject can still exist in the master goals.
+                    // For simplicity now, if user wants to delete a subject here, it removes it entirely for that student.
+                    // If a subject is removed from master, it will be removed for all students.
+                    // If user only wants to hide a subject for a student, this needs more complex logic.
+                    // Let's assume for now removing a subject here means deleting its goals for THIS student.
+                    const message = `Sind Sie sicher, dass Sie das Fach "${name}" und alle zugehörigen Lernziele für ${appState.students[appState.activeStudent].name} löschen möchten? (Dies entfernt das Fach nur für diesen Schüler, nicht aus den Master-Lernzielen.)`;
+                    showConfirmationModal(message, () => {
+                        delete appState.students[appState.activeStudent].subjects[name];
+                        if (appState.activeSubject === name) {
+                            appState.activeSubject = null;
+                            appState.viewMode = 'studentOverview';
+                        }
+                        saveState();
+                        render();
+                    });
                 };
 
                 container.appendChild(button);
@@ -565,74 +733,172 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
         
-        // Update overview button style based on activeSubject state
-        if (appState.activeSubject === null) {
+        // Update button styles based on active view mode
+        if (appState.viewMode === 'studentOverview') {
             showOverviewBtn.classList.add('bg-indigo-100', 'text-indigo-700', 'font-semibold');
         } else {
             showOverviewBtn.classList.remove('bg-indigo-100', 'text-indigo-700', 'font-semibold');
         }
+
+        if (appState.viewMode === 'masterGoals') {
+            showMasterGoalsBtn.classList.add('bg-indigo-100', 'text-indigo-700', 'font-semibold');
+        } else {
+            showMasterGoalsBtn.classList.remove('bg-indigo-100', 'text-indigo-700', 'font-semibold');
+        }
     }
 
-    // Renders the main content area, either the subject-specific view or the overview
+    // Renders the main content area based on viewMode
     function renderMainContent() {
-        if (!appState.activeStudent) {
+        // Destroy existing charts to prevent memory leaks and rendering issues
+        for (const chartKey in charts) {
+            if (charts[chartKey]) {
+                charts[chartKey].destroy();
+                charts[chartKey] = null;
+            }
+        }
+
+        if (appState.viewMode === 'masterGoals') {
+            renderMasterGoalsPage();
+        } else if (!appState.activeStudent) {
             mainContent.innerHTML = `
                 <div class="p-8 bg-white rounded-xl shadow-sm text-center">
                     <h2 class="text-2xl font-bold mb-4 text-slate-800">Bitte einen Schüler auswählen</h2>
                     <p class="text-slate-600">Wählen Sie links einen Schüler aus oder fügen Sie einen neuen hinzu, um sein Portfolio anzuzeigen.</p>
                 </div>
             `;
-            return;
-        }
-
-        if (appState.activeSubject === null) {
+        } else if (appState.viewMode === 'studentOverview' || appState.activeSubject === null) {
             renderOverviewPage();
+        } else if (appState.viewMode === 'studentSubject') {
+            renderSubjectPage(); // Renamed from renderMainContent's subject specific part
+        }
+    }
+
+    // Renders the page for managing master goals
+    function renderMasterGoalsPage() {
+        mainContent.innerHTML = `
+            <div class="p-8 bg-white rounded-xl shadow-sm mb-8">
+                <h2 class="text-3xl font-bold mb-6 text-slate-800">Master-Lernziele verwalten</h2>
+                <form id="masterGoalForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 mb-1">Lernziel Text</label>
+                        <input type="text" name="text" required class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Fach</label>
+                            <input type="text" name="subjectName" required class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Kategorie</label>
+                            <select name="category" class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500">
+                                <option value="grund">Grundanforderung</option>
+                                <option value="erweitert">Erweiterte Anforderung</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 mb-1">Gewichtung (1-5)</label>
+                        <input type="range" name="weight" min="1" max="5" value="3" class="w-full">
+                        <span id="masterGoalWeightValue" class="text-sm text-slate-600">3</span>
+                    </div>
+                    <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-2.5 px-4 rounded-lg hover:bg-indigo-700 transition">Master-Lernziel hinzufügen</button>
+                </form>
+            </div>
+
+            <div class="bg-white p-8 rounded-xl shadow-sm">
+                <h2 class="text-2xl font-bold mb-4 text-slate-800">Bestehende Master-Lernziele</h2>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-200">
+                        <thead class="bg-slate-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Lernziel</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Fach</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Kategorie</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Gewichtung</th>
+                                <th scope="col" class="relative px-6 py-3">
+                                    <span class="sr-only">Actions</span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="masterGoalsTableBody" class="bg-white divide-y divide-slate-200">
+                            <!-- Master goals will be injected here -->
+                        </tbody>
+                    </table>
+                </div>
+                ${appState.masterGoals.length === 0 ? '<p class="text-slate-500 text-center py-4">Noch keine Master-Lernziele erfasst.</p>' : ''}
+            </div>
+        `;
+
+        const masterGoalForm = document.getElementById('masterGoalForm');
+        const masterGoalWeightInput = masterGoalForm.querySelector('input[name="weight"]');
+        const masterGoalWeightValueSpan = document.getElementById('masterGoalWeightValue');
+
+        masterGoalWeightInput.oninput = (e) => {
+            masterGoalWeightValueSpan.textContent = e.target.value;
+        };
+
+        masterGoalForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const newMasterGoal = {
+                text: formData.get('text').trim(),
+                subjectName: formData.get('subjectName').trim(),
+                category: formData.get('category'),
+                weight: parseInt(formData.get('weight'), 10)
+            };
+            if (newMasterGoal.text && newMasterGoal.subjectName) {
+                addMasterGoal(newMasterGoal);
+                e.target.reset(); // Clear form
+                masterGoalWeightValueSpan.textContent = '3'; // Reset weight display
+            }
+        });
+
+        const masterGoalsTableBody = document.getElementById('masterGoalsTableBody');
+        appState.masterGoals.forEach(mGoal => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">${mGoal.text}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">${mGoal.subjectName}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">${mGoal.category === 'grund' ? 'Grundanforderung' : 'Erweiterte Anforderung'}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">${mGoal.weight}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button data-id="${mGoal.id}" class="edit-master-goal-btn text-indigo-600 hover:text-indigo-900 mr-4" title="Bearbeiten">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    </button>
+                    <button data-id="${mGoal.id}" class="delete-master-goal-btn text-red-600 hover:text-red-900" title="Löschen">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"></path><line x1="18" y1="9" x2="12" y2="15"></line><line x1="12" y1="9" x2="18" y2="15"></line></svg>
+                    </button>
+                </td>
+            `;
+            masterGoalsTableBody.appendChild(row);
+
+            row.querySelector('.edit-master-goal-btn').addEventListener('click', (e) => {
+                showEditMasterGoalModal(e.currentTarget.dataset.id);
+            });
+            row.querySelector('.delete-master-goal-btn').addEventListener('click', (e) => {
+                removeMasterGoal(e.currentTarget.dataset.id);
+            });
+        });
+    }
+
+    // Renders the subject-specific page for the active student
+    function renderSubjectPage() {
+        if (!appState.activeStudent || !appState.activeSubject) {
+            // Should not happen if renderMainContent handles viewMode correctly
+            mainContent.innerHTML = `<p class="text-slate-500 text-center py-4">Ansicht nicht verfügbar.</p>`;
             return;
         }
 
-        // Subject-specific view HTML structure
+        const student = appState.students[appState.activeStudent];
+        const goals = student.subjects[appState.activeSubject] || [];
+
         mainContent.innerHTML = `
             <div class="grid grid-cols-1 xl:grid-cols-5 gap-8">
-                <!-- Left Column (Form & List) -->
+                <!-- Left Column (Goal List) -->
                 <div class="xl:col-span-2 space-y-8">
                     <div class="bg-white p-6 rounded-xl shadow-sm">
-                        <h2 class="text-2xl font-bold mb-4 text-slate-800">Neues Lernziel für ${appState.students[appState.activeStudent].name} in ${appState.activeSubject}</h2>
-                        <form id="goalForm" class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-medium text-slate-600 mb-1">Text</label>
-                                <input type="text" name="text" required class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
-                            </div>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-slate-600 mb-1">Kategorie</label>
-                                    <select name="category" class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
-                                        <option value="grund">Grundanforderung</option>
-                                        <option value="erweitert">Erweiterte Anforderung</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-slate-600 mb-1">Beurteilung (Initial)</label>
-                                    <select name="status" class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
-                                        <option value="erreicht">Erreicht</option>
-                                        <option value="teilweise">Teilweise</option>
-                                        <option value="nicht">Nicht erreicht</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-slate-600 mb-1">Gewichtung (1-5)</label>
-                                <input type="range" name="weight" min="1" max="5" value="3" class="w-full">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-slate-600 mb-1">Datum (Initial)</label>
-                                <input type="date" name="date" required class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
-                            </div>
-                            <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-2.5 px-4 rounded-lg hover:bg-indigo-700 transition">Hinzufügen</button>
-                        </form>
-                    </div>
-                    <div class="bg-white p-6 rounded-xl shadow-sm">
-                        <h2 class="text-2xl font-bold mb-4 text-slate-800">Lernziele-Liste</h2>
-                        <div id="goalList" class="space-y-3 max-h-[45vh] overflow-y-auto pr-2 custom-scrollbar">
+                        <h2 class="text-2xl font-bold mb-4 text-slate-800">Lernziele-Liste für ${student.name} in ${appState.activeSubject}</h2>
+                        <div id="goalList" class="space-y-3 max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar">
                             <!-- Goal items will be injected here -->
                         </div>
                     </div>
@@ -701,24 +967,6 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
         
-        const goalForm = document.getElementById('goalForm');
-        // Set default date to today
-        goalForm.querySelector('input[name="date"]').valueAsDate = new Date(); 
-        goalForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            const newGoal = {
-                text: formData.get('text'),
-                category: formData.get('category'),
-                status: formData.get('status'), // This will be the initial status
-                weight: +formData.get('weight'), // Convert to number
-                date: formData.get('date'), // This will be the initial date
-            };
-            addGoal(newGoal);
-            e.target.reset(); // Clear form
-            goalForm.querySelector('input[name="date"]').valueAsDate = new Date(); // Reset date
-        });
-
         renderGoalList();
         renderCharts();
     }
@@ -728,27 +976,25 @@ document.addEventListener('DOMContentLoaded', () => {
         const goalListContainer = document.getElementById('goalList');
         if (!goalListContainer) return;
 
-        // Get goals for the active student and active subject
         const goals = appState.activeStudent && appState.activeSubject
             ? appState.students[appState.activeStudent].subjects[appState.activeSubject] || []
             : [];
 
         goalListContainer.innerHTML = '';
         if (goals.length === 0) {
-            goalListContainer.innerHTML = `<p class="text-slate-500 text-center py-4">Noch keine Lernziele erfasst.</p>`;
+            goalListContainer.innerHTML = `<p class="text-slate-500 text-center py-4">Noch keine Lernziele für dieses Fach erfasst.</p>`;
             return;
         }
 
-        // Sort goals by date (of the latest revision) in descending order
+        // Sort goals by date (of the latest revision) in descending order, or by ID if no revisions
         goals.slice().sort((a, b) => {
-            const dateA = a.revisions.length > 0 ? new Date(a.revisions[a.revisions.length - 1].date) : new Date(0);
-            const dateB = b.revisions.length > 0 ? new Date(b.revisions[b.revisions.length - 1].date) : new Date(0);
+            const dateA = a.revisions.length > 0 ? new Date(a.revisions[a.revisions.length - 1].date) : new Date(a.id);
+            const dateB = b.revisions.length > 0 ? new Date(b.revisions[b.revisions.length - 1].date) : new Date(b.id);
             return dateB - dateA;
         }).forEach(goal => {
-            // Get the latest revision or an empty object if no revisions
             const latestRevision = goal.revisions.length > 0 ? goal.revisions[goal.revisions.length - 1] : {};
             const statusColor = statusInfo[latestRevision.status]?.color || 'bg-slate-400';
-            const statusLabel = statusInfo[latestRevision.status]?.label || 'Nicht beurteilt';
+            const statusLabel = latestRevision.status ? statusInfo[latestRevision.status]?.label : 'Nicht beurteilt';
             const categoryText = goal.category === 'grund' ? 'Grundanforderung' : 'Erweiterte Anforderung';
             const formattedDate = latestRevision.date ? new Date(latestRevision.date).toLocaleDateString('de-DE') : 'N/A';
 
@@ -773,17 +1019,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     </div>
                     <div class="flex flex-col gap-2">
-                        <button class="update-goal-btn flex-shrink-0 text-slate-400 hover:text-indigo-600 transition-colors" title="Status aktualisieren">
+                        <button class="update-goal-btn flex-shrink-0 text-slate-400 hover:text-indigo-600 transition-colors" title="Status aktualisieren" data-goal-id="${goal.id}">
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                         </button>
-                        <button class="delete-goal-btn flex-shrink-0 text-slate-400 hover:text-red-600 transition-colors" title="Löschen">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"></path><line x1="18" y1="9" x2="12" y2="15"></line><line x1="12" y1="9" x2="18" y2="15"></line></svg>
-                        </button>
+                        <!-- Removal of goals is now handled via master goals for consistency -->
                     </div>
                 </div>
             `;
-            el.querySelector('.delete-goal-btn').addEventListener('click', () => removeGoal(goal.id));
-            el.querySelector('.update-goal-btn').addEventListener('click', () => showUpdateStatusModal(goal.id)); // Event listener for update
+            el.querySelector('.update-goal-btn').addEventListener('click', (e) => showUpdateStatusModal(e.currentTarget.dataset.goalId));
             goalListContainer.appendChild(el);
         });
     }
@@ -895,7 +1138,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (goal.revisions.length > 0) {
                     const initialRevision = goal.revisions[0];
                     const monthIndex = new Date(initialRevision.date).getMonth();
-                    const schoolYearMonthIndex = (monthIndex - 7 + 12) % 12;
+                    const schoolYearMonthIndex = (monthIndex - 7 + 12) % 12; // Aug is 0, Sep 1, ..., Jul 11
                     
                     if(monthlyWeightedSums[schoolYearMonthIndex]) { 
                         monthlyWeightedSums[schoolYearMonthIndex][initialRevision.status] += goal.weight;
@@ -1126,15 +1369,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     <!-- Subject overview cards will be injected here -->
                 </div>
                 <div class="flex justify-start mt-6">
-                     <button id="addSubjectInOverviewBtn" class="px-4 py-2 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 transition">
-                         Neues Fach hinzufügen
+                     <button id="addSubjectToStudentBtn" class="px-4 py-2 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 transition">
+                         Neues Fach für diesen Schüler hinzufügen
                      </button>
                 </div>
-                <div id="addSubjectFormInOverview" class="hidden mt-4 p-3 bg-slate-50 rounded-lg transition-all max-w-sm">
-                    <input type="text" id="newSubjectNameInOverview" placeholder="Name des Fachs..." class="w-full px-2 py-1.5 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                <div id="addSubjectToStudentForm" class="hidden mt-4 p-3 bg-slate-50 rounded-lg transition-all max-w-sm">
+                    <input type="text" id="newSubjectNameToStudent" placeholder="Name des Fachs..." class="w-full px-2 py-1.5 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
                     <div class="flex gap-2 mt-2">
-                        <button id="addSubjectBtnInOverview" class="flex-1 px-3 py-1.5 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700 transition-colors">Hinzufügen</button>
-                        <button id="cancelAddSubjectBtnInOverview" class="flex-1 px-3 py-1.5 bg-slate-200 text-slate-700 text-sm rounded-md hover:bg-slate-300 transition-colors">Abbrechen</button>
+                        <button id="addSubjectToStudentSubmitBtn" class="flex-1 px-3 py-1.5 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700 transition-colors">Hinzufügen</button>
+                        <button id="cancelAddSubjectToStudentBtn" class="flex-1 px-3 py-1.5 bg-slate-200 text-slate-700 text-sm rounded-md hover:bg-slate-300 transition-colors">Abbrechen</button>
                     </div>
                 </div>
             </div>
@@ -1167,6 +1410,7 @@ document.addEventListener('DOMContentLoaded', () => {
             card.className = `bg-slate-50 p-6 rounded-lg shadow-sm border border-slate-200 cursor-pointer hover:shadow-md transition-shadow`;
             card.onclick = () => {
                 appState.activeSubject = subjectName;
+                appState.viewMode = 'studentSubject';
                 saveState();
                 render();
             };
@@ -1198,47 +1442,47 @@ document.addEventListener('DOMContentLoaded', () => {
             overviewGrid.appendChild(card);
         });
 
-        // Event listeners for Add Subject from overview page
-        const addSubjectInOverviewBtn = document.getElementById('addSubjectInOverviewBtn');
-        const addSubjectFormInOverview = document.getElementById('addSubjectFormInOverview');
-        const newSubjectNameInOverview = document.getElementById('newSubjectNameInOverview');
-        const addSubjectBtnInOverview = document.getElementById('addSubjectBtnInOverview');
-        const cancelAddSubjectBtnInOverview = document.getElementById('cancelAddSubjectBtnInOverview');
+        // Event listeners for Add Subject from overview page for a specific student
+        const addSubjectToStudentBtn = document.getElementById('addSubjectToStudentBtn');
+        const addSubjectToStudentForm = document.getElementById('addSubjectToStudentForm');
+        const newSubjectNameToStudent = document.getElementById('newSubjectNameToStudent');
+        const addSubjectToStudentSubmitBtn = document.getElementById('addSubjectToStudentSubmitBtn');
+        const cancelAddSubjectToStudentBtn = document.getElementById('cancelAddSubjectToStudentBtn');
 
-        if (addSubjectInOverviewBtn) {
-            addSubjectInOverviewBtn.addEventListener('click', () => {
-                addSubjectFormInOverview.classList.remove('hidden');
-                newSubjectNameInOverview.focus();
+        if (addSubjectToStudentBtn) {
+            addSubjectToStudentBtn.addEventListener('click', () => {
+                addSubjectToStudentForm.classList.remove('hidden');
+                newSubjectNameToStudent.focus();
             });
         }
-        if (cancelAddSubjectBtnInOverview) {
-            cancelAddSubjectBtnInOverview.addEventListener('click', () => {
-                addSubjectFormInOverview.classList.add('hidden');
-                newSubjectNameInOverview.value = '';
+        if (cancelAddSubjectToStudentBtn) {
+            cancelAddSubjectToStudentBtn.addEventListener('click', () => {
+                addSubjectToStudentForm.classList.add('hidden');
+                newSubjectNameToStudent.value = '';
             });
         }
-        if (addSubjectBtnInOverview) {
-            addSubjectBtnInOverview.addEventListener('click', () => {
-                const name = newSubjectNameInOverview.value.trim();
+        if (addSubjectToStudentSubmitBtn) {
+            addSubjectToStudentSubmitBtn.addEventListener('click', () => {
+                const name = newSubjectNameToStudent.value.trim();
                 if (name && appState.activeStudent && !appState.students[appState.activeStudent].subjects[name]) {
-                    appState.students[appState.activeStudent].subjects[name] = []; // Add empty subject
+                    appState.students[appState.activeStudent].subjects[name] = []; // Add empty subject for THIS student
                     saveState();
                     render();
-                    newSubjectNameInOverview.value = '';
-                    addSubjectFormInOverview.classList.add('hidden');
+                    newSubjectNameToStudent.value = '';
+                    addSubjectToStudentForm.classList.add('hidden');
                 }
             });
         }
-        if (newSubjectNameInOverview) {
-            newSubjectNameInOverview.addEventListener('keypress', (e) => {
+        if (newSubjectNameToStudent) {
+            newSubjectNameToStudent.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
-                    const name = newSubjectNameInOverview.value.trim();
+                    const name = newSubjectNameToStudent.value.trim();
                     if (name && appState.activeStudent && !appState.students[appState.activeStudent].subjects[name]) {
                         appState.students[appState.activeStudent].subjects[name] = [];
                         saveState();
                         render();
-                        newSubjectNameInOverview.value = '';
-                        addSubjectFormInOverview.classList.add('hidden');
+                        newSubjectNameToStudent.value = '';
+                        addSubjectToStudentForm.classList.add('hidden');
                     }
                 }
             });
@@ -1269,6 +1513,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // Event listener for the "Übersicht" button
     showOverviewBtn.addEventListener('click', () => {
         appState.activeSubject = null; // Set active subject to null to show overview for current student
+        appState.viewMode = 'studentOverview';
+        saveState();
+        render();
+    });
+
+    // Event listener for "Master-Lernziele" button
+    showMasterGoalsBtn.addEventListener('click', () => {
+        appState.viewMode = 'masterGoals';
+        appState.activeSubject = null; // Clear active subject in master view
         saveState();
         render();
     });
